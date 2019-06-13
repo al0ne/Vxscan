@@ -1,0 +1,116 @@
+php|headers|Set-Cookie|PHPSSIONID
+jsp|headers|Set-Cookie|JSESSIONID
+asp|headers|Set-Cookie|ASPSESSION
+aspx|headers|Set-Cookie|ASP.NET_SessionId
+aspx|headers|X-AspNet-Version|version
+aspx|index|index|<input[^>]+name=\"__VIEWSTATE
+aspx|index|index|<a[^>]*?href=('|")[^http][^>]*?\.aspx(\?|\#|\1)
+asp|index|index|<a[^>]*?href=('|")[^http][^>]*?\.asp(\?|\#|\1)
+php|index|index|<a[^>]*?href=('|")[^http][^>]*?\.php(\?|\#|\1)
+jsp|index|index|<a[^>]*?href=('|")[^http][^>]*?\.jsp(\?|\#|\1)
+discuz|index|index|<meta name=\"generator\" content=\"Discuz!|<script src=\".*?logging\\.js
+phpwind|index|index|<meta name=\"generator\" content=\"(phpwind|PHPWind)|Powered by <a href="http://www.phpwind.net/" target="_blank" rel="nofollow">phpwind
+wordpress|headers|WP-Super-Cache|Served supercache file from PHP
+wordpress|index|index|<meta name=\"generator\" content=\"WordPress|\"[^\"]+/wp-content/[^\"]+\"
+phpcms|index|index|<link href=\"templates/default/skins/default/phpcms.css\"|Powered by (PHPCMS|Phpcms)
+qibosoft|index|index|Powered by <a href="http://www.qibosoft.com" target="_blank">qibosoft
+yidacms|index|index|Powered by YidaCms|Powered by <a href="http://yidacms.com" target="_blank">YidaCms
+cmseasy|index|index|<meta name="author" content="CmsEasy Team" />|Powered by <a href="http://www.cmseasy.cn" title="CmsEasy.*?" target="_blank">CmsEasy</a>
+ecshop|index|index|Powered by ECShop
+liangjing|index|index|LJcms
+kesioncms|index|index|ks_inc
+metinfo|index|index|Powered by <a href="http://www.MetInfo.cn"
+shopex|index|index|<meta name="generator" content="ShopEx .*?" />
+maccms|index|index|Copyright .*? maccms\.com Inc
+dedecms|index|index|Powered by <a target="_blank" href="http://www.dedecms.com/">DedeCMS</a>
+startbbs|index|index|class=\"startbbs|Powered by <a href=\"http://www.startbbs.com\"
+drupal|headers|X-Generator|Drupal
+drupal|headers|X-Drupal-Cache|.*?
+drupal|headers|X-Drupal-Dynamic-Cache|.*?
+waikucms|index|index|Powered by <b>WaiKuCms
+yongyou_nc|index|index|src=logo/images/ufida_nc.png
+cacti|index|index|<title>.*?Cacti.*?</title>
+cacti|headers|Set-Cookie|Cacti=
+zabbix|headers|Set-Cookie|zbx_sessionid
+destoon|index|index|Powered by DESTOON|DESTOON B2B SYSTEM
+Winmail|index|index|Winmail Mail Server
+Coremail|index|index|Coremail[^>]+<\/title>
+Winmail|headers|Set-Cookie|magicwinmail
+Winmail|index|index|Powered by Winmail Server
+TurboMail|index|index|Powered by TurboMail 
+Xmail|index|index|\d{4}-\d{4}\s*webmail.idccenter.net
+outlook|headers|X-OWA-Version|.*?
+outlook|index|index|Outlook Web (Access|App)\s*(?=<\/title>)
+Anymacro|index|index|sec.anymacro.com
+ExtMail|index|index|powered by.*?Extmail
+Lotus|index|index|IBM Lotus iNotes[^>]+(?=<\/title>)|iwaredir.nsf
+SquirrelMail|index|index|SquirrelMail Project Team|SquirrelMail
+SquirrelMail|headers|Set-Cookie|SQMSESSID
+eqmail|index|index|Powered by EQMail
+TMailer|index|index|TMailer Collaboration Suite Web Client 
+zimbra|headers|Set-Cookie|ZM_TEST
+zimbra|index|index|zimbra[^>]+(?=<\/title>)|Zimbra,?\s*Inc. All rights reserved.
+bxemail|index|index|abc@bxemail.com
+Horde|index|index|<title>[^>]+?Horde|\/themes\/graphics\/horde-power1.png
+Atmail|index|index|powered by Atmail
+IlohaMail|headers|Set-Cookie|IMAIL_TEST_COOKIE
+IlohaMail|headers|SESS_KEY|.*?
+IlohaMail|index|index|powered by[^>]+IlohaMail
+fangmail|index|index|fangmail
+Roundcube|index|index|Roundcube
+mailbase|headers|Set-Cookie|\s*(mb_lang|mb_ui_type|mb_cus_type)
+mailbase|index|index|MailBase[^<>]+(?=<\/title>)
+KXmail|index|index|Powered By\s?<[^>]+>\s?KXmail
+tongda|index|index|href="/images/tongda\.ico"
+trs_wcm|index|index|<title[^>]+>TRS WCM[^<]+</title>|href="/wcm/console/auth/reg_newuser.jsp"
+mymps|index|index|powered by[^&]+Mymps.*?|wcontent="mymps
+mailgard|index|index|mailgard\swebmail
+eYouMail|index|index|eYouMail .*?eYou.net
+phpstudy|index|index|<title>phpStudy.*?</title>
+wamp|index|index|<title>WAMPSERVER Homepage</title>
+appserv|index|index|<title>AppServ Open Project.*?</title>
+upupw|index|index|<meta name=\"author\" content=\"UPUPW\" />
+lnmp|index|index|<title>.*?LNMP.*?</title>
+lanmp|index|index|<title>.*?lanmp.*?</title>
+jboss|headers|X-Powered-By|JBoss
+jboss|index|index|JBoss, Home of Professional Open Source
+weblogic|index|index|<META NAME=\"GENERATOR\" CONTENT=\"WebLogic Server\">
+jenkins|headers|X-Jenkins|.*?
+axis|index|index|<title>Axis 2 - Home</title>
+hadoop|index|index|<title>Hadoop Administration</title>
+elasticsearch|index|index|\"cluster_name\" : \"elasticsearch\"
+tomcat|index|index|<title>Apache Tomcat/.*?</title>
+hfs|headers|Set-Cookie|HFS_SID
+http_basic|headers|WWW-Authenticate|Basic
+Router:2wire|headers|Server|2wire
+Router:2wire|headers|WWW-Authenticate|2wire
+Router:3com|index|index|<META Detect1=\"Company\" CONTENT=\"3COM\">
+Router:asmax|headers|WWW-Authenticate|Asmax
+Router:asus|headers|WWW-Authenticate|Asus
+Router:asus|index|index|<title>ASUS.*?Router.*?</title>
+Router:d-link-dcs|headers|WWW-Authenticate|DCS-
+Router:d-link-dir|headers|server|DIR-
+Router:juniper|index|index|<title>Log In - Juniper Web Device Manager</title>
+Router:linksys|headers|WWW-Authenticate|Basic realm=\"RT-
+Router:linksys|index|index|<meta name=\"description\" content=\"Included with your Linksys Smart Wi-Fi Router.*?\">
+Router:netcore|headers|WWW-Authenticate|NETCORE
+Router:netgear|headers|WWW-Authenticate|NETGEAR
+Router:technicolor|index|index|<img src=\"technicolor-logo.png\" alt=\"technicolor-logo\" .*?/>
+Router:thomson|headers|WWW-Authenticate|Thomson
+Router:tplink|headers|WWW-Authenticate|TP-LINK
+Router:ubiquiti|index|index|<meta name=\"copyright\" content=\"Copyright.*?Ubiquiti.*?Networks.*?\">
+Router:zte|headers|WWW-Authenticate|Basic realm=\"ZTE-
+Router:h3c|headers|WWW-Authenticate|h3c
+Router:h3c|index|index|<title>WEB Management Interface for H3C SecPath Series</title>| Hangzhou H3C
+Router:huawei|headers|WWW-Authenticate|huawei
+Camera:hikvision|headers|Server|Hikvision-Webs
+Camera:hikvision|index|index|/doc/page/login.asp
+Camera:hikvision|headers|Server|DVRDVS-Webs
+Camera:hikvision|headers|server|DNVRS-Webs
+Camera:hikvision|headers|server|App-webs
+Camera:cctv|headers|Server|JAWS/1.0
+Camera:web-service|index|index|<title>WEB SERVICE</title>
+Camera:siemens-camera|index|index|<title>SIEMENS IP-Camera</title
+Camera:samsoftech|index|index|Developed By :  <.*?>SAM Softech
+Camera:zebra|index|index|<H1>Zebra Technologies<BR>
+Camera:routeros|index|index|<title>RouterOS router configuration page<\/title>

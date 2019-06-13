@@ -1,0 +1,13 @@
+requests
+tqdm
+pyfiglet
+fake-useragent
+beautifulsoup4
+geoip2
+tldextract
+python-nmap
+geoip2
+tldextract
+lxml
+pymongo
+virustotal_python
