@@ -26,7 +26,7 @@ import difflib
 import logging
 from urllib import parse
 from lib.settings import *
-from lib.random_header import HEADERS
+from lib.random_header import get_ua
 from lib.common import start, bcolors
 from lib.save_html import save_html
 from lib.active import ActiveCheck
@@ -50,11 +50,11 @@ def read_file(file, word, ext):
 class Cartesian(object):
     def __init__(self):
         self._data_list = []
-
+    
     # 添加生成笛卡尔积的数据列表
     def add_data(self, data=[]):
         self._data_list.append(data)
-
+    
     # 计算笛卡尔积
     def build(self):
         urls = []
@@ -74,7 +74,7 @@ class DirScan():
         self.wordlist = word
         self.ext = ext
         self.waf = []
-
+    
     def get_urls(self, domain):
         if self.ext is None:
             self.ext = 'jsp,php,asp,html'
@@ -171,7 +171,7 @@ class DirScan():
         path.extend(index.build())
         path.extend(wordlist)
         return set(path)
-
+    
     def check404(self, url, text):
         url = parse.urlparse(url)
         result = 0
@@ -185,7 +185,7 @@ class DirScan():
                     host,
                     timeout=TIMEOUT,
                     verify=False,
-                    headers=HEADERS,
+                    headers=get_ua(),
                     allow_redirects=False)
                 self.notstr = r.text[:10000]
                 self.notlen = len(r.text)
@@ -198,7 +198,7 @@ class DirScan():
             result = difflib.SequenceMatcher(None, self.notstr,
                                              text).quick_ratio()
         return result
-
+    
     def save(self, out):
         outjson = []
         with open('report/result.json', 'w') as f:
@@ -228,7 +228,7 @@ class DirScan():
                         outjson.append(i)
             json.dump(outjson, f, ensure_ascii=False, indent=4)
             save_html(outjson, html_name)
-
+    
     def get_proto(self, ports):
         result = []
         try:
@@ -243,10 +243,11 @@ class DirScan():
         except:
             pass
         return result
-
+    
     def scan(self, host):
         try:
             session = requests.Session()
+            HEADERS = get_ua()
             HEADERS.update(COOKIE)
             session.headers.update(HEADERS)
             r = session.get(
@@ -262,8 +263,8 @@ class DirScan():
             # 判断逻辑：1.排除无效状态吗 2.排除无效内容类型 3.判断302跳转
             # 4. 判断302跳转不能等于首页 5. 判断内容长度不等于404页面长度
             if (r.status_code not in BLOCK_CODE) and (
-                    r.headers['Content-Type'] not in BLOCK_CONTYPE) and (
-                    goto != self.goto) and (parse.urlparse(
+                r.headers['Content-Type'] not in BLOCK_CONTYPE) and (
+                goto != self.goto) and (parse.urlparse(
                 r.url).netloc not in parse.urlparse(goto).netloc) and (self.notlen != len(r.text)):
                 text = r.text[:10000]
                 title = re.search('(?<=<title>).*(?=</title>)', text)
@@ -296,18 +297,18 @@ class DirScan():
         except Exception as e:
             logging.exception(e)
         return 'OK'
-
+    
     def run(self, task):
         global THREADS
         print(bcolors.RED + '\nURLS：' + bcolors.ENDC)
         with concurrent.futures.ThreadPoolExecutor(
-                max_workers=THREADS) as executor:
+            max_workers=THREADS) as executor:
             futures = [executor.submit(self.scan, i) for i in task]
             for future in tqdm.tqdm(
-                    concurrent.futures.as_completed(futures),
-                    total=len(futures)):
+                concurrent.futures.as_completed(futures),
+                total=len(futures)):
                 future.result()
-
+    
     # 创建启动任务
     def pool(self, hosts):
         task = []

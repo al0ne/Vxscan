@@ -2,14 +2,14 @@
 # https://github.com/al0ne
 
 from lib.verify import get_list
-from lib.random_header import HEADERS
+from lib.random_header import get_ua
 from lxml import etree
 import requests
 
 
 def get_title(url):
     try:
-        r = requests.get(url, headers=HEADERS, timeout=3, verify=False)
+        r = requests.get(url, headers=get_ua(), timeout=3, verify=False)
         r.encoding = "utf-8"
         html = etree.HTML(r.text)
         title = html.xpath('//title/text()')

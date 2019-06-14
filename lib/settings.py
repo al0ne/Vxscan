@@ -18,6 +18,9 @@ BLOCK_CONTYPE = [
 # 是否跳过目录扫描
 SKIP = True
 
+# 是否加载POC
+POC = True
+
 # 无效的404页面
 # page404 = [
 #     'page404"', "404.png", "找不到页面", "Not Found", "访问的页面不存在",

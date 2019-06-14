@@ -13,7 +13,7 @@ Usage
 
 """
 from lib.verify import verify
-from lib.random_header import HEADERS
+from lib.random_header import get_ua
 import requests
 
 vuln = ['solr']
@@ -24,7 +24,7 @@ def check(ip, ports, apps):
         try:
             url = 'http://' + ip
             url = url + '/solr/'
-            g = requests.get(url, headers=HEADERS, timeout=5)
+            g = requests.get(url, headers=get_ua(), timeout=5)
             if g.status_code is 200 and 'Solr Admin' in g.content and 'Dashboard' in g.content:
                 return 'Apache Solr Admin leask'
         except Exception:

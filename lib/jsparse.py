@@ -4,7 +4,7 @@
 
 import requests
 import re
-from lib.random_header import HEADERS
+from lib.random_header import get_ua
 from lxml import etree
 import concurrent.futures
 from lib.settings import TIMEOUT
@@ -18,7 +18,7 @@ class JsParse():
     def jsparse(self):
         out = []
         try:
-            r = requests.get(self.host, headers=HEADERS, timeout=TIMEOUT, verify=False)
+            r = requests.get(self.host, headers=get_ua(), timeout=TIMEOUT, verify=False)
             html = etree.HTML(r.text)
             result = html.xpath('//script/@src')
 
@@ -44,7 +44,7 @@ class JsParse():
                 url = 'http:' + url
             else:
                 url = self.host + '/' + url
-        r = requests.get(url, headers=HEADERS, timeout=TIMEOUT)
+        r = requests.get(url, headers=get_ua(), timeout=TIMEOUT)
         regex = (
             # 匹配url
             r'\b(?:http:|https:)(?:[\w/\.]+)?(?:[a-zA-Z0-9_\-\.]{1,})\.(?:php|asp|ashx|jspx|aspx|jsp|json|action|html|txt|xml|do)\b',

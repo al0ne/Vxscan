@@ -10,24 +10,21 @@ requests
 tqdm  
 pyfiglet  
 fake-useragent  
-beautifulsoup4  
-pycrypto  
-paramiko  
+beautifulsoup4      
 geoip2  
-tldextract  
-pymysql  
-pymssql  
+tldextract      
 python-nmap  
 geoip2  
 tldextract  
 lxml  
 pymongo  
-psycopg2  
 virustotal_python  
 apt install libpq-dev nmap  
 wget https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz  
 解压后将里面的GeoLite2-City.mmdb放到vxscan/db/GeoLite2-City.mmdb  
-pip3 install -r requirements.txt
+wget https://geolite.maxmind.com/download/geoip/database/GeoLite2-ASN.tar.gz  
+解压后将里面的GeoLite2-ASN.mmdb放到vxscan/db/GeoLite2-ASN.mmdb  
+pip3 install -r requirements.txt  
 
 Features
 --------

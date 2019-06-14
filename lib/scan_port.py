@@ -340,7 +340,7 @@ class ScanPort():
                 ipaddr = re.sub(':\d+', '', ipaddr)
             self.run(ipaddr)
         except Exception as e:
-            print(e)
+            pass
         for i in self.out:
             _, port = i.split(':')
             out.append(port)

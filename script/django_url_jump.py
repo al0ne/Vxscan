@@ -3,12 +3,12 @@
 
 import requests
 from lib.verify import get_list
-from lib.random_header import HEADERS
+from lib.random_header import get_ua
 
 
 def run(url):
     domain = 'example.com'
-    r = requests.get(url + '//' + domain, allow_redirects=False, timeout=3, headers=HEADERS)
+    r = requests.get(url + '//' + domain, allow_redirects=False, timeout=3, headers=get_ua())
     if (r.status_code == 301) and (domain in r.headers['Location']) and url.strip('http://') not in r.headers[
         'Location']:
         return 'django url jump : ' + url
