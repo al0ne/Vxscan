@@ -1,0 +1,153 @@
+[
+    {
+        "testphp.vulnweb.com": {
+            "WAF": "NoWAF",
+            "Webinfo": {
+                "apps": [
+                    "Nginx",
+                    "PHP",
+                    "DreamWeaver",
+                    "php"
+                ],
+                "title": "Home of Acunetix Art",
+                "server": "nginx/1.4.1",
+                "pdns": [
+                    "176.28.50.165 : 2019-06-09 02:05:52"
+                ],
+                "reverseip": [
+                    "176.28.50.165",
+                    "rs202995.rs.hosteurope.de",
+                    "testhtml5.vulnweb.com",
+                    "testphp.ingensec.ch",
+                    "testphp.ingensec.com",
+                    "testphp.ingensec.fr",
+                    "testphp.vulnweb.com",
+                    "vulnweb.com",
+                    "www.vulnweb.com"
+                ]
+            },
+            "Ports": [
+                "IMAPS:993",
+                "ssh:22",
+                "imap:143",
+                "http:80",
+                "Unknown:8880",
+                "pop:110",
+                "POP3:995",
+                "smtp:25",
+                "Unknown:8443",
+                "SMTPS:465",
+                "DNS:53",
+                "ftp:21"
+            ],
+            "Ipaddr": "176.28.50.165",
+            "Address": "德国  ",
+            "Vuln": [
+                "http://testphp.vulnweb.com | Home of Acunetix Art",
+                "MySQL SQLi:http://testphp.vulnweb.com/search.php?test=query",
+                "MySQL SQLi:http://testphp.vulnweb.com/artists.php?artist=1",
+                "MySQL SQLi:http://testphp.vulnweb.com/listproducts.php?cat=2"
+            ],
+            "URLS": [
+                {
+                    "rsp_code": 200,
+                    "rsp_len": 12473,
+                    "title": "None",
+                    "contype": "xml",
+                    "url": "/.idea/workspace.xml"
+                },
+                {
+                    "rsp_code": 200,
+                    "rsp_len": 1,
+                    "title": "None",
+                    "contype": "plain",
+                    "url": "/CVS/Root"
+                },
+                {
+                    "rsp_code": 200,
+                    "rsp_len": 4732,
+                    "title": "search",
+                    "contype": "html",
+                    "url": "/search.php"
+                },
+                {
+                    "rsp_code": 200,
+                    "rsp_len": 1,
+                    "title": "None",
+                    "contype": "plain",
+                    "url": "/CVS/Entries"
+                },
+                {
+                    "rsp_code": 200,
+                    "rsp_len": 3265,
+                    "title": "Home of WASP Art",
+                    "contype": "plain",
+                    "url": "/index.bak"
+                },
+                {
+                    "rsp_code": 200,
+                    "rsp_len": 143,
+                    "title": "None",
+                    "contype": "xml",
+                    "url": "/.idea/scopes/scope_settings.xml"
+                },
+                {
+                    "rsp_code": 200,
+                    "rsp_len": 3265,
+                    "title": "Home of WASP Art",
+                    "contype": "zip",
+                    "url": "/index.zip"
+                },
+                {
+                    "rsp_code": 200,
+                    "rsp_len": 275,
+                    "title": "None",
+                    "contype": "xml",
+                    "url": "/.idea/modules.xml"
+                },
+                {
+                    "rsp_code": 200,
+                    "rsp_len": 5523,
+                    "title": "login page",
+                    "contype": "html",
+                    "url": "/login.php"
+                },
+                {
+                    "rsp_code": 200,
+                    "rsp_len": 278,
+                    "title": "Index of /admin/",
+                    "contype": "html",
+                    "url": "/admin/"
+                },
+                {
+                    "rsp_code": 200,
+                    "rsp_len": 224,
+                    "title": "None",
+                    "contype": "xml",
+                    "url": "/crossdomain.xml"
+                },
+                {
+                    "rsp_code": 302,
+                    "rsp_len": 14,
+                    "title": "None",
+                    "contype": "html",
+                    "url": "/userinfo.php"
+                },
+                {
+                    "rsp_code": 200,
+                    "rsp_len": 6,
+                    "title": "None",
+                    "contype": "plain",
+                    "url": "/.idea/.name"
+                },
+                {
+                    "rsp_code": 200,
+                    "rsp_len": 4958,
+                    "title": "Home of Acunetix Art",
+                    "contype": "html",
+                    "url": "/index.php"
+                }
+            ]
+        }
+    }
+]
