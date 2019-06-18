@@ -6,6 +6,8 @@ python3写的综合扫描工具，主要用来敏感文件探测(目录扫描与
 2019.6.18  
 修复了指纹识别iis网站报错的问题，修改了apps.json  
 删除了一些容易引起错误的第三方库与脚本  
+扫描如果出现一闪而过就完成，那是因为程序首先检测dns解析与ping操作  
+第一次用Vxscan时，fake_useragent会加载这里的 https://fake-useragent.herokuapp.com/browsers/0.1.11 的ua列表，可能会出现加载超时错误  
 
 Requirements
 --------
