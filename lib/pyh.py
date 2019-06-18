@@ -155,9 +155,9 @@ class PyH(Tag):
         self.head += title(name)
 
     def __iadd__(self, obj):
-        if isinstance(obj, head) or isinstance(obj, body):
+        if isinstance(obj, (head, body)):
             self.addObj(obj)
-        elif isinstance(obj, meta) or isinstance(obj, link):
+        elif isinstance(obj, (meta, link)):
             self.head += obj
         else:
             self.body += obj
