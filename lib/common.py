@@ -88,16 +88,19 @@ def reverse_domain(host):
                         result.append(url)
                     elif re.search(r'\d+\.\d+\.\d+\.\d+', url):
                         result.append(url)
-        except (TypeError, json.decoder.JSONDecodeError):
-            r = requests.get('http://api.hackertarget.com/reverseiplookup/?q={}'.format(host), headers=get_ua(),
-                             timeout=5)
-            if '<html>' not in r.text:
-                text = r.text
-                for _ in text.split('\n'):
-                    if _:
-                        result.append(_)
-            else:
-                result = []
+        except:
+            try:
+                r = requests.get('http://api.hackertarget.com/reverseiplookup/?q={}'.format(host), headers=get_ua(),
+                                 timeout=4)
+                if '<html>' not in r.text:
+                    text = r.text
+                    for _ in text.split('\n'):
+                        if _:
+                            result.append(_)
+                else:
+                    result = []
+            except:
+                pass
         return result
 
 
