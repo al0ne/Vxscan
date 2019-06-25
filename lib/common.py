@@ -152,7 +152,7 @@ def start(url):
             result = checkwaf(r.headers, r.text[:10000])
             if result == 'NoWAF':
                 r = requests.get(
-                    url + '/index.php?id=1 ' + payload, headers=get_ua(), timeout=TIMEOUT)
+                    url + '/index.php?id=1 ' + payload, headers=get_ua(), timeout=TIMEOUT, verify=False)
                 result = checkwaf(r.headers, r.text[:10000])
         except Exception as e:
             webinfo = {}
