@@ -36,7 +36,7 @@ html_name = time.strftime("%Y%m%d%H%M%S", time.localtime())
 shodan_api = ''
 
 # VT接口
-virustotal_api = 'xxxxxxxxxxxxxxxxxxxxxxxxxx'
+virustotal_api = ''
 
 COOKIE = {'Cookie': 'Vxscan 1.0'}
 

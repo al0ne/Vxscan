@@ -65,7 +65,8 @@ def geoip(ip):
             city = ''
         return '{} {} {}'.format(country, site, city)
     except:
-        return 'None'
+        pass
+    return 'None'
 
 
 def reverse_domain(host):
@@ -102,19 +103,22 @@ def reverse_domain(host):
 
 def virustotal(host):
     # VT接口，主要用来查询PDNS，绕过CDN
-    vtotal = Virustotal(virustotal_api)
-    if re.search(r'\d+\.\d+\.\d+\.\d+', host):
-        return ['None']
-    resp = vtotal.domain_report(host)
-    history_ip = []
+    if virustotal_api:
+        vtotal = Virustotal(virustotal_api)
+        if re.search(r'\d+\.\d+\.\d+\.\d+', host):
+            return ['None']
+        resp = vtotal.domain_report(host)
+        history_ip = []
     
-    if resp.get('status_code') != 403:
-        for i in resp.get('json_resp').get('resolutions'):
-            address = i.get('ip_address')
-            timeout = i.get('last_resolved')
-            if iscdn(address):
-                history_ip.append(address + ' : ' + timeout)
-        return history_ip[-10:]
+        if resp.get('status_code') != 403:
+            for i in resp.get('json_resp').get('resolutions'):
+                address = i.get('ip_address')
+                timeout = i.get('last_resolved')
+                if iscdn(address):
+                    history_ip.append(address + ' : ' + timeout)
+            return history_ip[-10:]
+        else:
+            return ['None']
     else:
         return ['None']
 
