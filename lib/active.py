@@ -27,17 +27,20 @@ class ActiveCheck():
             else:
                 result = socket.gethostbyname(loc)
             if result:
-                if platform.system() == 'Windows':
-                    subprocess.check_output(['ping', '-n', '2', '-w', '1', result])
-                else:
-                    subprocess.check_output(['ping', '-c 2', '-W 1', result])
-                if getattr(loc, 'netloc'):
-                    self.out.append(url)
+                try:
+                    if platform.system() == 'Windows':
+                        subprocess.check_output(['ping', '-n', '2', '-w', '1', result])
+                    else:
+                        subprocess.check_output(['ping', '-c 2', '-W 1', result])
+                    if getattr(loc, 'netloc'):
+                        self.out.append(url)
+                except:
+                    print("{} is not alive".format(result))
+                
         except AttributeError:
             self.out.append(url)
         except Exception as e:
             pass
-
     def pool(self):
         with concurrent.futures.ThreadPoolExecutor(max_workers=50) as executor:
             executor.map(self.check, self.hosts)
