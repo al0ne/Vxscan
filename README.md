@@ -4,6 +4,10 @@ English | [简体中文](./README.zh-CN.md)
 Python3 comprehensive scanning tool, mainly used for sensitive file detection (directory scanning and js leak interface), WAF/CDN identification, port scanning, fingerprint/service identification, operating system identification, weak password detection, POC scanning, SQL injection, winding Pass CDN, check the next station
 
 # Update
+2019.7.1  
+Display the host whose ping detection failed.  
+The -u command can add multiple targets, separated by commas  
+Fix fingerprint recognition error  
 2019.6.18  
 Fixed the problem of fingerprint recognition iis website error, modified apps.json   
 Removed some third-party libraries and scripts that are prone to errors  
