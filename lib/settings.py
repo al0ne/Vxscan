@@ -32,6 +32,9 @@ POC = True
 # 保存的文件名
 html_name = time.strftime("%Y%m%d%H%M%S", time.localtime())
 
+# ping探测
+PING = True
+
 # shodan
 shodan_api = ''
 

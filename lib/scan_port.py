@@ -11,7 +11,7 @@ from urllib import parse
 
 sys.path.append(os.getcwd())
 
-THREADNUM = 120  # 线程数
+THREADNUM = 100  # 线程数
 
 SIGNS = (
     # 协议 | 版本 | 关键字
@@ -282,7 +282,7 @@ class ScanPort():
 
     def socket_scan(self, hosts):
         global PROBE
-        socket.setdefaulttimeout(2)
+        socket.setdefaulttimeout(1)
         ip, port = hosts.split(':')
         try:
             if len(self.port) < 25:
