@@ -19,7 +19,7 @@ def check(ip, ports, apps):
     try:
         probe = get_list(ip, ports)
         for url in probe:
-            r = requests.get(url, timeout=3, headers=get_ua())
+            r = requests.get(url, timeout=3, headers=get_ua(), verify=False)
             if 'Jenkins' in r.text:
                 result = jenkins(url)
     except Exception as e:

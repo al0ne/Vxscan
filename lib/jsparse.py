@@ -44,7 +44,7 @@ class JsParse():
                 url = 'http:' + url
             else:
                 url = self.host + '/' + url
-        r = requests.get(url, headers=get_ua(), timeout=TIMEOUT)
+        r = requests.get(url, headers=get_ua(), timeout=TIMEOUT, verify=False)
         regex = (
             # 匹配url
             r'\b(?:http:|https:)(?:[\w/\.]+)?(?:[a-zA-Z0-9_\-\.]{1,})\.(?:php|asp|ashx|jspx|aspx|jsp|json|action|html|txt|xml|do)\b',
