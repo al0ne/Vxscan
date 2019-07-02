@@ -78,7 +78,8 @@ def reverse_domain(host):
         header.update({'Referer': 'https://www.yougetsignal.com/tools/web-sites-on-web-server/'})
         header.update({'origin': 'https://www.yougetsignal.com'})
         try:
-            r = requests.post('https://domains.yougetsignal.com/domains.php', headers=header, data=data, timeout=5)
+            r = requests.post('https://domains.yougetsignal.com/domains.php', headers=header, data=data, timeout=5,
+                              verify=False)
             text = json.loads(r.text)
             domain = tldextract.extract(host)
             for i in text.get('domainArray'):
@@ -91,7 +92,7 @@ def reverse_domain(host):
         except:
             try:
                 r = requests.get('http://api.hackertarget.com/reverseiplookup/?q={}'.format(host), headers=get_ua(),
-                                 timeout=4)
+                                 timeout=4, verify=False)
                 if '<html>' not in r.text:
                     text = r.text
                     for _ in text.split('\n'):
@@ -112,7 +113,7 @@ def virustotal(host):
             return ['None']
         resp = vtotal.domain_report(host)
         history_ip = []
-    
+        
         if resp.get('status_code') != 403:
             for i in resp.get('json_resp').get('resolutions'):
                 address = i.get('ip_address')
@@ -206,6 +207,8 @@ def start(url):
         osname = 'None'
     sys.stdout.write(bcolors.RED + "OS：\n" + bcolors.ENDC)
     sys.stdout.write(bcolors.OKGREEN + '[+] {}\n'.format(osname) + bcolors.ENDC)
+    if not address:
+        address = 'None'
     data = {
         url.netloc: {
             'WAF': result,

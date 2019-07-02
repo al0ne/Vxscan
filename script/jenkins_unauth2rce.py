@@ -8,7 +8,7 @@ vuln = ['Jenkins']
 def jenkins(url):
     try:
         payload = "/securityRealm/user/admin/descriptorByName/org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition/checkScriptCompile"
-        r = requests.get(url + payload, timeout=5, headers=get_ua())
+        r = requests.get(url + payload, timeout=5, headers=get_ua(), verify=False)
         if 'java.lang.NullPointerException' in r.text:
             return "CVE-2018-1000861 Jenkins_rce url: {}".format(url)
     except Exception as e:

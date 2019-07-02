@@ -45,7 +45,7 @@ def sqli(qurl):
     try:
         for _ in payload:
             url = qurl + _
-            r = requests.get(url, headers=get_ua(), timeout=TIMEOUT)
+            r = requests.get(url, headers=get_ua(), timeout=TIMEOUT, verify=False)
             for (dbms, regex) in ((dbms, regex) for dbms in DBMS_ERRORS for regex in DBMS_ERRORS[dbms]):
                 if re.search(regex, r.text):
                     result = '{} SQLi:{}'.format(dbms, qurl)
@@ -58,7 +58,7 @@ def sqli(qurl):
                 url = re.sub(r'\w+\.\w{3}$', lfi, qurl)
             elif re.search('=\w+', qurl):
                 url = re.sub(r'\w+$', lfi, qurl)
-            r = requests.get(url, headers=get_ua(), timeout=TIMEOUT)
+            r = requests.get(url, headers=get_ua(), timeout=TIMEOUT, verify=False)
             if re.search(pattern, r.text, re.S):
                 OUT.append('LFI: {}'.format(url))
                 break
@@ -71,7 +71,7 @@ def parse_html(host):
     global links
     try:
         exts = ['asp', 'php', 'jsp', 'do', 'aspx', 'action', 'do']
-        r = requests.get(host, headers=get_ua(), timeout=3)
+        r = requests.get(host, headers=get_ua(), timeout=3, verify=False)
         tmp = html.document_fromstring(r.text)
         tmp.make_links_absolute(host)
         link = tmp.iterlinks()
