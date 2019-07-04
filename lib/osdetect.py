@@ -7,7 +7,6 @@ import logging
 
 
 def osdetect(ip):
-    logging.basicConfig(filename='error.log', level=logging.ERROR)
     nm = nmap.PortScanner()
     try:
         result = nm.scan(hosts=ip, arguments='-sS -O -vv -n -T4 -p 80,22,443')
@@ -18,7 +17,7 @@ def osdetect(ip):
             else:
                 break
     except Exception as e:
-        logging.exception(e)
+        pass
 
 
 if __name__ == "__main__":

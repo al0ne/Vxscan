@@ -279,7 +279,7 @@ class ScanPort():
         self.port = []
         self.out = []
         self.num = 0
-
+    
     def socket_scan(self, hosts):
         global PROBE
         socket.setdefaulttimeout(1)
@@ -303,14 +303,15 @@ class ScanPort():
                                 proto = '{}:{}'.format(pattern[1].decode(), port)
                                 self.out.append(proto)
                                 break
+            
             else:
                 self.num = 1
-
+        
         except (socket.timeout, ConnectionResetError):
             pass
         except:
             pass
-
+    
     def run(self, ip):
         hosts = []
         global PORTS, THREADNUM
@@ -318,11 +319,11 @@ class ScanPort():
             hosts.append('{}:{}'.format(ip, i))
         try:
             with concurrent.futures.ThreadPoolExecutor(
-                    max_workers=THREADNUM) as executor:
+                max_workers=THREADNUM) as executor:
                 executor.map(self.socket_scan, hosts)
         except EOFError:
             pass
-
+    
     def pool(self):
         out = []
         try:

@@ -4,7 +4,7 @@ import time
 TIMEOUT = 5
 # 要排除的状态吗
 BLOCK_CODE = [
-    301, 403, 308, 404, 405, 406, 408, 411, 417, 429, 493, 502, 503, 504, 999
+    301, 400, 401, 403, 308, 404, 405, 406, 408, 411, 417, 429, 493, 502, 503, 504, 999
 ]
 # 设置扫描线程
 THREADS = 100
@@ -21,14 +21,6 @@ SKIP = True
 # 是否加载POC
 POC = True
 
-# 无效的404页面
-# page404 = [
-#     'page404"', "404.png", "找不到页面", "Not Found", "访问的页面不存在",
-#     '<html><head><script type="text/javascript">',
-#     '\\xe9\\xa1\\xb5\\xe9\\x9d\\xa2\\xe4\\xb8\\x8d\\xe5\\xad\\x98\\xe5\\x9c\\xa8',
-#     "page does't exist"
-# ]
-
 # 保存的文件名
 html_name = time.strftime("%Y%m%d%H%M%S", time.localtime())
 
@@ -41,7 +33,7 @@ shodan_api = ''
 # VT接口
 virustotal_api = ''
 
-COOKIE = {'Cookie': 'Vxscan 1.0'}
+COOKIE = {'Cookie': 'xxoo'}
 
 PASS = ['123456789', 'password', 'passwd', 'a123456', '123456', 'a123456789', '1234567890', 'qq123456', 'abc123456',
         '123456a',

@@ -108,20 +108,23 @@ def reverse_domain(host):
 def virustotal(host):
     # VT接口，主要用来查询PDNS，绕过CDN
     if virustotal_api:
-        vtotal = Virustotal(virustotal_api)
-        if re.search(r'\d+\.\d+\.\d+\.\d+', host):
-            return ['None']
-        resp = vtotal.domain_report(host)
-        history_ip = []
-        
-        if resp.get('status_code') != 403:
-            for i in resp.get('json_resp').get('resolutions'):
-                address = i.get('ip_address')
-                timeout = i.get('last_resolved')
-                if iscdn(address):
-                    history_ip.append(address + ' : ' + timeout)
-            return history_ip[-10:]
-        else:
+        try:
+            vtotal = Virustotal(virustotal_api)
+            if re.search(r'\d+\.\d+\.\d+\.\d+', host):
+                return ['None']
+            resp = vtotal.domain_report(host)
+            history_ip = []
+            
+            if resp.get('status_code') != 403:
+                for i in resp.get('json_resp').get('resolutions'):
+                    address = i.get('ip_address')
+                    timeout = i.get('last_resolved')
+                    if iscdn(address):
+                        history_ip.append(address + ' : ' + timeout)
+                return history_ip[-10:]
+            else:
+                return ['None']
+        except:
             return ['None']
     else:
         return ['None']
@@ -181,11 +184,11 @@ def start(url):
     else:
         webinfo = {}
         jsparse = ''
+    sys.stdout.write(bcolors.RED + "PortScan：\n" + bcolors.ENDC)
     if iscdn(host):
         open_port = ScanPort(url).pool()
     else:
         open_port = ['CDN:0']
-    sys.stdout.write(bcolors.RED + "PortScan：\n" + bcolors.ENDC)
     for _ in open_port:
         sys.stdout.write(bcolors.OKGREEN + '[+] {}\n'.format(_) + bcolors.ENDC)
     if POC:
@@ -207,7 +210,7 @@ def start(url):
         osname = 'None'
     sys.stdout.write(bcolors.RED + "OS：\n" + bcolors.ENDC)
     sys.stdout.write(bcolors.OKGREEN + '[+] {}\n'.format(osname) + bcolors.ENDC)
-    if not address:
+    if 'address' not in locals().keys():
         address = 'None'
     data = {
         url.netloc: {
