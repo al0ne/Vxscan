@@ -9,6 +9,7 @@ import geoip2.database
 import socket
 import traceback
 import json
+import chardet
 import tldextract
 from virustotal_python import Virustotal
 from lib.osdetect import osdetect
@@ -155,7 +156,9 @@ def start(url):
     sql = ''
     if 'r' in locals().keys():
         try:
-            webinfo = (WebPage(r.url, r.content.decode('utf8'), r.headers).info())
+            coding = chardet.detect(r.content).get('encoding')
+            r.encoding = coding
+            webinfo = (WebPage(r.url, r.text, r.headers).info())
             result = checkwaf(r.headers, r.text[:10000])
             if result == 'NoWAF':
                 r = requests.get(
