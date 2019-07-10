@@ -7,7 +7,6 @@ import requests
 import sys
 import geoip2.database
 import socket
-import traceback
 import json
 import chardet
 import tldextract
@@ -164,9 +163,8 @@ def start(url):
                 r = requests.get(
                     url + '/index.php?id=1 ' + payload, headers=get_ua(), timeout=TIMEOUT, verify=False)
                 result = checkwaf(r.headers, r.text[:10000])
-        except Exception as e:
+        except:
             webinfo = {}
-            traceback.print_exc()
         if webinfo:
             sys.stdout.write(bcolors.RED + "Webinfo：\n" + bcolors.ENDC)
             sys.stdout.write(bcolors.OKGREEN + '[+] Title: {}\n'.format(webinfo.get('title')) + bcolors.ENDC)
