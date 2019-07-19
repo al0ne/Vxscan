@@ -7,7 +7,10 @@ import re
 import concurrent.futures
 import sys
 import os
+import time
 from urllib import parse
+from lib.bcolors import bcolors
+from lib.sqldb import Sqldb
 
 sys.path.append(os.getcwd())
 
@@ -15,14 +18,14 @@ THREADNUM = 100  # 线程数
 
 SIGNS = (
     # 协议 | 版本 | 关键字
-    b'smb|smb|^\0\0\0.\xffSMBr\0\0\0\0.*',
-    b"xmpp|xmpp|^\<\?xml version='1.0'\?\>",
-    b'netbios|netbios|^\x79\x08.*BROWSE',
-    b'http|http|HTTP/1.1',
-    b'netbios|netbios|^\x79\x08.\x00\x00\x00\x00',
-    b'netbios|netbios|^\x05\x00\x0d\x03',
-    b'netbios|netbios|^\x82\x00\x00\x00',
-    b'netbios|netbios|\x83\x00\x00\x01\x8f',
+    b'SMB|SMB|^\0\0\0.\xffSMBr\0\0\0\0.*',
+    b'SMB|SMB|^\x83\x00\x00\x01\x8f',
+    b"Xmpp|Xmpp|^\<\?xml version='1.0'\?\>",
+    b'Netbios|Netbios|^\x79\x08.*BROWSE',
+    b'Netbios|Netbios|^\x79\x08.\x00\x00\x00\x00',
+    b'Netbios|Netbios|^\x05\x00\x0d\x03',
+    b'Netbios|Netbios|^\x82\x00\x00\x00',
+    b'Netbios|Netbios|\x83\x00\x00\x01\x8f',
     b'backdoor|backdoor|^500 Not Loged in',
     b'backdoor|backdoor|GET: command',
     b'backdoor|backdoor|sh: GET:',
@@ -30,132 +33,132 @@ SIGNS = (
     b'backdoor|backdoor|^bash[$#]',
     b'backdoor|backdoor|^sh[$#]',
     b'backdoor|backdoor|^Microsoft Windows',
-    b'db2|db2|.*SQLDB2RA',
-    b'dell-openmanage|dell-openmanage|^\x4e\x00\x0d',
-    b'finger|finger|^\r\n	Line	  User',
-    b'finger|finger|Line	 User',
-    b'finger|finger|Login name: ',
-    b'finger|finger|Login.*Name.*TTY.*Idle',
-    b'finger|finger|^No one logged on',
-    b'finger|finger|^\r\nWelcome',
-    b'finger|finger|^finger:',
-    b'finger|finger|^must provide username',
-    b'finger|finger|finger: GET: ',
-    b'ftp|ftp|^220.*\n331',
-    b'ftp|ftp|^220.*\n530',
-    b'ftp|ftp|^220.*FTP',
-    b'ftp|ftp|^220 .* Microsoft .* FTP',
-    b'ftp|ftp|^220 Inactivity timer',
-    b'ftp|ftp|^220 .* UserGate',
-    b'ftp|ftp|^220.*FileZilla Server',
-    b'ldap|ldap|^\x30\x0c\x02\x01\x01\x61',
-    b'ldap|ldap|^\x30\x32\x02\x01',
-    b'ldap|ldap|^\x30\x33\x02\x01',
-    b'ldap|ldap|^\x30\x38\x02\x01',
-    b'ldap|ldap|^\x30\x84',
-    b'ldap|ldap|^\x30\x45',
-    b'ldp|ldp|^\x00\x01\x00.*?\r\n\r\n$',
-    b'rdp|rdp|^\x03\x00\x00\x0b',
-    b'rdp|rdp|^\x03\x00\x00\x11',
-    b'rdp|rdp|^\x03\0\0\x0b\x06\xd0\0\0\x12.\0$',
-    b'rdp|rdp|^\x03\0\0\x17\x08\x02\0\0Z~\0\x0b\x05\x05@\x06\0\x08\x91J\0\x02X$',
-    b'rdp|rdp|^\x03\0\0\x11\x08\x02..}\x08\x03\0\0\xdf\x14\x01\x01$',
-    b'rdp|rdp|^\x03\0\0\x0b\x06\xd0\0\0\x03.\0$',
-    b'rdp|rdp|^\x03\0\0\x0b\x06\xd0\0\0\0\0\0',
-    b'rdp|rdp|^\x03\0\0\x0e\t\xd0\0\0\0[\x02\xa1]\0\xc0\x01\n$',
-    b'rdp|rdp|^\x03\0\0\x0b\x06\xd0\0\x004\x12\0',
-    b'rdp-proxy|rdp-proxy|^nmproxy: Procotol byte is not 8\n$',
-    b'msrpc|msrpc|^\x05\x00\x0d\x03\x10\x00\x00\x00\x18\x00\x00\x00\x00\x00',
-    b'msrpc|msrpc|\x05\0\r\x03\x10\0\0\0\x18\0\0\0....\x04\0\x01\x05\0\0\0\0$',
-    b'mssql|mssql|^\x05\x6e\x00',
-    b'mssql|mssql|^\x04\x01',
-    b'mssql|mysql|;MSSQLSERVER;',
-    b'mysql|mysql|mysql_native_password',
-    b'mysql|mysql|^\x19\x00\x00\x00\x0a',
-    b'mysql|mysql|^\x2c\x00\x00\x00\x0a',
-    b'mysql|mysql|hhost \'',
-    b'mysql|mysql|khost \'',
-    b'mysql|mysql|mysqladmin',
-    b'mysql|mysql|whost \'',
-    b'mysql|mysql|^[.*]\x00\x00\x00\n.*?\x00',
-    b'mysql-secured|mysql|this MySQL server',
-    b'mysql-secured|MariaDB|MariaDB server',
-    b'mysql-secured|mysql-secured|\x00\x00\x00\xffj\x04Host',
+    b'DB2|DB2|.*SQLDB2RA',
+    b'Finger|Finger|^\r\n	Line	  User',
+    b'Finger|Finger|Line	 User',
+    b'Finger|Finger|Login name: ',
+    b'Finger|Finger|Login.*Name.*TTY.*Idle',
+    b'Finger|Finger|^No one logged on',
+    b'Finger|Finger|^\r\nWelcome',
+    b'Finger|Finger|^finger:',
+    b'Finger|Finger|^must provide username',
+    b'Finger|Finger|finger: GET: ',
+    b'FTP|FTP|^220.*\n331',
+    b'FTP|FTP|^220.*\n530',
+    b'FTP|FTP|^220.*FTP',
+    b'FTP|FTP|^220 .* Microsoft .* FTP',
+    b'FTP|FTP|^220 Inactivity timer',
+    b'FTP|FTP|^220 .* UserGate',
+    b'FTP|FTP|^220.*FileZilla Server',
+    b'LDAP|LDAP|^\x30\x0c\x02\x01\x01\x61',
+    b'LDAP|LDAP|^\x30\x32\x02\x01',
+    b'LDAP|LDAP|^\x30\x33\x02\x01',
+    b'LDAP|LDAP|^\x30\x38\x02\x01',
+    b'LDAP|LDAP|^\x30\x84',
+    b'LDAP|LDAP|^\x30\x45',
+    b'RDP|RDP|^\x00\x01\x00.*?\r\n\r\n$',
+    b'RDP|RDP|^\x03\x00\x00\x0b',
+    b'RDP|RDP|^\x03\x00\x00\x11',
+    b'RDP|RDP|^\x03\0\0\x0b\x06\xd0\0\0\x12.\0$',
+    b'RDP|RDP|^\x03\0\0\x17\x08\x02\0\0Z~\0\x0b\x05\x05@\x06\0\x08\x91J\0\x02X$',
+    b'RDP|RDP|^\x03\0\0\x11\x08\x02..}\x08\x03\0\0\xdf\x14\x01\x01$',
+    b'RDP|RDP|^\x03\0\0\x0b\x06\xd0\0\0\x03.\0$',
+    b'RDP|RDP|^\x03\0\0\x0b\x06\xd0\0\0\0\0\0',
+    b'RDP|RDP|^\x03\0\0\x0e\t\xd0\0\0\0[\x02\xa1]\0\xc0\x01\n$',
+    b'RDP|RDP|^\x03\0\0\x0b\x06\xd0\0\x004\x12\0',
+    b'RDP-Proxy|RDP-Proxy|^nmproxy: Procotol byte is not 8\n$',
+    b'Msrpc|Msrpc|^\x05\x00\x0d\x03\x10\x00\x00\x00\x18\x00\x00\x00\x00\x00',
+    b'Msrpc|Msrpc|\x05\0\r\x03\x10\0\0\0\x18\0\0\0....\x04\0\x01\x05\0\0\0\0$',
+    b'Mssql|Mssql|^\x05\x6e\x00',
+    b'Mssql|Mssql|^\x04\x01',
+    b'Mssql|Mssql|;MSSQLSERVER;',
+    b'Mysql|Mysql|mysql_native_password',
+    b'Mysql|Mysql|^\x19\x00\x00\x00\x0a',
+    b'Mysql|Mysql|^\x2c\x00\x00\x00\x0a',
+    b'Mysql|Mysql|hhost \'',
+    b'Mysql|Mysql|khost \'',
+    b'Mysql|Mysql|mysqladmin',
+    b'Mysql|Mysql|whost \'',
+    b'Mysql|Mysql|^[.*]\x00\x00\x00\n.*?\x00',
+    b'Mysql|Mysql|this MySQL server',
+    b'Mysql|Mysql|MariaDB server',
+    b'Mysql|Mysql|\x00\x00\x00\xffj\x04Host',
     b'db2jds|db2jds|^N\x00',
-    b'nagiosd|nagiosd|Sorry, you \(.*are not among the allowed hosts...',
-    b'nessus|nessus|< NTP 1.2 >\x0aUser:',
+    b'Nagiosd|Nagiosd|Sorry, you \(.*are not among the allowed hosts...',
+    b'Nessus|Nessus|< NTP 1.2 >\x0aUser:',
     b'oracle-tns-listener|\(ERROR_STACK=\(ERROR=\(CODE=',
     b'oracle-tns-listener|\(ADDRESS=\(PROTOCOL=',
-    b'oracle-dbsnmp|^\x00\x0c\x00\x00\x04\x00\x00\x00\x00',
+    b'oracle-dbSNMP|^\x00\x0c\x00\x00\x04\x00\x00\x00\x00',
     b'oracle-https|^220- ora',
-    b'rmi|rmi|\x00\x00\x00\x76\x49\x6e\x76\x61',
-    b'rmi|rmi|^\x4e\x00\x09',
-    b'postgresql|postgres|Invalid packet length',
-    b'postgresql|postgres|^EFATAL',
+    b'RMI|RMI|\x00\x00\x00\x76\x49\x6e\x76\x61',
+    b'RMI|RMI|^\x4e\x00\x09',
+    b'PostgreSQL|PostgreSQL|Invalid packet length',
+    b'PostgreSQL|PostgreSQL|^EFATAL',
     b'rpc-nfs|rpc-nfs|^\x02\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\x00',
-    b'rpc|rpc|\x01\x86\xa0',
-    b'rpc|rpc|\x03\x9b\x65\x42\x00\x00\x00\x01',
-    b'rpc|rpc|^\x80\x00\x00',
-    b'rsync|rsync|^@RSYNCD:',
+    b'RPC|RPC|\x01\x86\xa0',
+    b'RPC|RPC|\x03\x9b\x65\x42\x00\x00\x00\x01',
+    b'RPC|RPC|^\x80\x00\x00',
+    b'RSYNC|RSYNC|^@RSYNCD:',
     b'smux|smux|^\x41\x01\x02\x00',
     b'snmp-public|snmp-public|\x70\x75\x62\x6c\x69\x63\xa2',
-    b'snmp|snmp|\x41\x01\x02',
-    b'socks|socks|^\x05[\x00-\x08]\x00',
-    b'ssl|ssl|^..\x04\0.\0\x02',
-    b'ssl|ssl|^\x16\x03\x01..\x02...\x03\x01',
-    b'ssl|ssl|^\x16\x03\0..\x02...\x03\0',
-    b'ssl|ssl|SSL.*GET_CLIENT_HELLO',
-    b'ssl|ssl|^-ERR .*tls_start_servertls',
-    b'ssl|ssl|^\x16\x03\0\0J\x02\0\0F\x03\0',
-    b'ssl|ssl|^\x16\x03\0..\x02\0\0F\x03\0',
-    b'ssl|ssl|^\x15\x03\0\0\x02\x02\.*',
-    b'ssl|ssl|^\x16\x03\x01..\x02...\x03\x01',
-    b'ssl|ssl|^\x16\x03\0..\x02...\x03\0',
-    b'sybase|sybase|^\x04\x01\x00',
-    b'telnet|telnet|Telnet',
-    b'telnet|telnet|^\xff[\xfa-\xff]',
-    b'telnet|telnet|^\r\n%connection closed by remote host!\x00$',
-    b'rlogin|rlogin|login: ',
-    b'rlogin|rlogin|rlogind: ',
-    b'rlogin|rlogin|^\x01\x50\x65\x72\x6d\x69\x73\x73\x69\x6f\x6e\x20\x64\x65\x6e\x69\x65\x64\x2e\x0a',
-    b'tftp|tftp|^\x00[\x03\x05]\x00',
-    b'uucp|uucp|^login: password: ',
-    b'vnc|vnc|^RFB',
-    b'imap|imap|^\* OK.*?IMAP',
-    b'pop|pop|^\+OK.*?',
-    b'smtp|smtp|^220.*?SMTP',
-    b'smtp|smtp|^554 SMTP',
-    b'ftp|ftp|^220-',
-    b'ftp|ftp|^220.*?FTP',
-    b'ftp|ftp|^220.*?FileZilla',
-    b'ssh|ssh|^SSH-',
-    b'ssh|ssh|connection refused by remote host.',
-    b'rtsp|rtsp|^RTSP/',
-    b'sip|sip|^SIP/',
-    b'nntp|nntp|^200 NNTP',
-    b'sccp|sccp|^\x01\x00\x00\x00$',
-    b'webmin|webmin|.*MiniServ',
-    b'webmin|webmin|^0\.0\.0\.0:.*:[0-9]',
+    b'SNMP|SNMP|\x41\x01\x02',
+    b'Socks|Socks|^\x05[\x00-\x08]\x00',
+    b'SSL|SSL|^..\x04\0.\0\x02',
+    b'SSL|SSL|^\x16\x03\x01..\x02...\x03\x01',
+    b'SSL|SSL|^\x16\x03\0..\x02...\x03\0',
+    b'SSL|SSL|SSL.*GET_CLIENT_HELLO',
+    b'SSL|SSL|^-ERR .*tls_start_servertls',
+    b'SSL|SSL|^\x16\x03\0\0J\x02\0\0F\x03\0',
+    b'SSL|SSL|^\x16\x03\0..\x02\0\0F\x03\0',
+    b'SSL|SSL|^\x15\x03\0\0\x02\x02\.*',
+    b'SSL|SSL|^\x16\x03\x01..\x02...\x03\x01',
+    b'SSL|SSL|^\x16\x03\0..\x02...\x03\0',
+    b'Sybase|Sybase|^\x04\x01\x00',
+    b'Telnet|Telnet|Telnet',
+    b'Telnet|Telnet|^\xff[\xfa-\xff]',
+    b'Telnet|Telnet|^\r\n%connection closed by remote host!\x00$',
+    b'Rlogin|Rlogin|login: ',
+    b'Rlogin|Rlogin|rlogind: ',
+    b'Rlogin|Rlogin|^\x01\x50\x65\x72\x6d\x69\x73\x73\x69\x6f\x6e\x20\x64\x65\x6e\x69\x65\x64\x2e\x0a',
+    b'TFTP|TFTP|^\x00[\x03\x05]\x00',
+    b'UUCP|UUCP|^login: password: ',
+    b'VNC|VNC|^RFB',
+    b'IMAP|IMAP|^\* OK.*?IMAP',
+    b'POP|POP|^\+OK.*?',
+    b'SMTP|SMTP|^220.*?SMTP',
+    b'SMTP|SMTP|^554 SMTP',
+    b'FTP|FTP|^220-',
+    b'FTP|FTP|^220.*?FTP',
+    b'FTP|FTP|^220.*?FileZilla',
+    b'SSH|SSH|^SSH-',
+    b'SSH|SSH|connection refused by remote host.',
+    b'RTSP|RTSP|^RTSP/',
+    b'SIP|SIP|^SIP/',
+    b'NNTP|NNTP|^200 NNTP',
+    b'SCCP|SCCP|^\x01\x00\x00\x00$',
+    b'Webmin|Webmin|.*MiniServ',
+    b'Webmin|Webmin|^0\.0\.0\.0:.*:[0-9]',
     b'websphere-javaw|websphere-javaw|^\x15\x00\x00\x00\x02\x02\x0a',
-    b'smb|smb|^\x83\x00\x00\x01\x8f',
-    b'mongodb|mongodb|MongoDB',
+    b'Mongodb|Mongodb|MongoDB',
     b'Rsync|Rsync|@RSYNCD:',
     b'Squid|Squid|X-Squid-Error',
-    b'mssql|Mssql|MSSQLSERVER',
+    b'Mssql|Mssql|MSSQLSERVER',
     b'Vmware|Vmware|VMware',
-    b'iscsi|iscsi|\x00\x02\x0b\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
-    b'redis|redis|^-ERR unknown command',
-    b'redis|redis|^-ERR wrong number of arguments',
-    b'redis|redis|^-DENIED Redis is running',
-    b'memcached|memcached|^ERROR\r\n',
-    b'websocket|websocket|Server: WebSocket',
-    b'https|https|Instead use the HTTPS scheme to access'
-    b'https|https|HTTPS port',
-    b'https|https|Location: https',
+    b'ISCSI|ISCSI|\x00\x02\x0b\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
+    b'Redis|Redis|^-ERR unknown command',
+    b'Redis|Redis|^-ERR wrong number of arguments',
+    b'Redis|Redis|^-DENIED Redis is running',
+    b'MemCache|MemCache|^ERROR\r\n',
+    b'WebSocket|WebSocket|Server: WebSocket',
+    b'HTTPS|HTTPS|Instead use the HTTPS scheme to access'
+    b'HTTPS|HTTPS|HTTP request was sent to HTTPS',
+    b'HTTPS|HTTPS|Location: https',
     b'SVN|SVN|^\( success \( 2 2 \( \) \( edit-pipeline svndiff1',
-    b'dubbo|dubbo|^Unsupported command',
-    b'http|elasticsearch|cluster_name.*elasticsearch',
+    b'Dubbo|Dubbo|^Unsupported command',
+    b'HTTP|Elasticsearch|cluster_name.*elasticsearch',
     b'RabbitMQ|RabbitMQ|^AMQP\x00\x00\t\x01',
+    b'HTTP|HTTP|HTTP/1.1'
+
 )
 
 
@@ -181,54 +184,44 @@ def get_server(port):
         'Linux R RPE': '512',
         'Linux R RLT': '513',
         'Linux R cmd': '514',
-        'Rsync': '1873',
+        'Rsync': '873',
         'IMAPS': '993',
         'Proxy': '1080',
-        'JavaRMI': '10990',
-        'Oracle EMCTL': '1158',
+        'JavaRMI': '1099',
         'Lotus': '1352',
         'MSSQL': '1433',
         'MSSQL Monitor': '1434',
         'Oracle': '1521',
         'PPTP': '1723',
-        'cPanel admin panel/CentOS web panel': '2082',
-        'CPanel admin panel/CentOS web panel': '2083',
-        'Oracle XDB FTP': '2100',
+        'cPanel': '2082',
+        'CPanel': '2083',
         'Zookeeper': '2181',
-        'DA admin panel': '2222',
         'Docker': '2375',
         'Zebra': '2604',
-        'Gitea Web': '3000',
-        'Squid Proxy': '3128',
-        'MySQL/MariaDB': '3306',
-        'Kangle admin panel': '3312',
+        'MySQL': '3306',
+        'Kangle': '3312',
         'RDP': '3389',
         'SVN': '3690',
         'Rundeck': '4440',
         'GlassFish': '4848',
-        'SysBase/DB2': '5000',
         'PostgreSql': '5432',
         'PcAnywhere': '5632',
         'VNC': '5900',
-        'TeamViewer': '5938',
         'CouchDB': '5984',
         'varnish': '6082',
         'Redis': '6379',
-        'Aria2': '6800',
         'Weblogic': '9001',
-        'Kloxo admin panel': '7778',
+        'Kloxo': '7778',
         'Zabbix': '8069',
-        'RouterOS/Winbox': '8291',
+        'RouterOS': '8291',
         'WebSphere': '9090',
+        'Elasticsearch': '9200',
         'Elasticsearch': '9300',
-        'Virtualmin/Webmin': '10000',
-        'Zabbix agent': '10050',
-        'Zabbix server': '10051',
+        'Zabbix': '10050',
+        'Zabbix': '10051',
         'Memcached': '11211',
-        'FileZilla Manager': '14147',
         'MongoDB': '27017',
         'MongoDB': '28017',
-        'SAP NetWeaver': '50000',
         'Hadoop': '50070'
     }
     for k, v in SERVER.items():
@@ -303,7 +296,6 @@ class ScanPort():
                                 proto = '{}:{}'.format(pattern[1].decode(), port)
                                 self.out.append(proto)
                                 break
-            
             else:
                 self.num = 1
         
@@ -311,6 +303,9 @@ class ScanPort():
             pass
         except:
             pass
+    
+    def save(self, ipaddr, result):
+        Sqldb('result').get_ports(ipaddr, result)
     
     def run(self, ip):
         hosts = []
@@ -320,11 +315,14 @@ class ScanPort():
         try:
             with concurrent.futures.ThreadPoolExecutor(
                 max_workers=THREADNUM) as executor:
-                executor.map(self.socket_scan, hosts)
+                result = {executor.submit(self.socket_scan, i): i for i in hosts}
+                for future in concurrent.futures.as_completed(result):
+                    future.result()
         except EOFError:
             pass
     
     def pool(self):
+        sys.stdout.write(bcolors.RED + "PortScan：\n" + bcolors.ENDC)
         out = []
         try:
             # 判断给出的url是www.baiud.com还是www.baidu.com/path这种形式
@@ -349,10 +347,19 @@ class ScanPort():
             if i not in out:
                 self.out.append(get_server(i))
         if self.num == 0:
+            ports = list(set(self.out))
+            self.save(self.ipaddr, ports)
+            for _ in ports:
+                sys.stdout.write(bcolors.OKGREEN + '[+] {}\n'.format(_) + bcolors.ENDC)
             return list(set(self.out))
         else:
+            self.save(self.ipaddr, ['Portspoof:0'])
+            sys.stdout.write(bcolors.OKGREEN + '[+] Portspoof:0\n' + bcolors.ENDC)
             return ['Portspoof:0']
 
 
 if __name__ == "__main__":
-    print(ScanPort('127.0.0.1').pool())
+    start_time = time.time()
+    ScanPort('127.0.0.1').pool()
+    end_time = time.time()
+    print('\nrunning {0:.3f} seconds...'.format(end_time - start_time))

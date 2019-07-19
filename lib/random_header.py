@@ -6,16 +6,16 @@ import socket
 import struct
 from fake_useragent import UserAgent
 
-
 HEADERS = {
-        'Accept':
-            'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'User-Agent': "",
-        'Referer': 'https://www.google.com',
-        'X-Forwarded-For': "",
-        'X-Real-IP': "",
-        'Connection': 'keep-alive',
-    }
+    'Accept':
+        'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    'User-Agent': "",
+    'Referer': 'https://www.google.com',
+    'X-Forwarded-For': "",
+    'X-Real-IP': "",
+    'Connection': 'keep-alive',
+}
+
 
 def get_ua():
     ua = UserAgent()

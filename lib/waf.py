@@ -112,5 +112,6 @@ WAF_RULE = (
     'SiteLock TrueShield|content|content|sitelock-site-verification',
     'SonicWall|content|content|nsa_banner',
     'SonicWall|content|content|Web Site Blocked',
-    'Sophos UTM Firewall|content|content|Powered by UTM Web Protection'
+    'Sophos UTM Firewall|content|content|Powered by UTM Web Protection',
+    'd盾|content|content|D盾_拦截提示'
 )

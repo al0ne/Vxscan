@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Vxscan Report</title>
+    <link rel="stylesheet" href="report/index.css">
+    <link rel="stylesheet" href="report/bootstrap.min.css">
+    <style type="text/css">
+        .active {
+            background-color: #409EFF !important;
+            color: white;
+        }
+
+        .nav-link:hover {
+            background-color: lightgrey;
+        }
+
+        .nav-linl {
+            color: #409EFF !important;
+        }
+
+    </style>
+</head>
+<body style="margin: auto; height: 100%">
+<div id="app" style="height: 100%;">
+    <el-container style="height: 100%;">
+        <el-header style="font-size:18px; width: 80%; margin: auto;">
+            <ul class="nav nav-pills nav-justified">
+                <template v-for="item in table">
+                    <a class="nav-link" :class="{active: item.name===show.name}"
+                       @click="handle_switch_nav(item.name)" href="#"
+                    >
+                        {{item.name}}
+                    </a>
+                </template>
+            </ul>
+        </el-header>
+
+        <el-main style="margin: auto; width: 80%; padding-top: 0px;">
+
+            <div style="margin: auto;">
+                <template v-model="show">
+                    <h2>
+                        <template>
+                            <el-input placeholder="please input to search" clearable
+                                      v-model="search" @clear="search_filter()"
+                                      style="float:left; width: 300px; margin-bottom: 0px; padding-bottom: 10px;"
+                                      suffix-icon="el-icon-search"
+                            >
+                            </el-input>
+                        </template>
+                    </h2>
+                    <el-table :data="show_detail" border stripe
+                              @sort-change="switch_sort_info"
+                              style="margin: auto;">
+                        <el-table-column min-width="120" v-for="column in show.columns" sortable
+                                         :prop="column.field" :label="column.title">
+                        </el-table-column>
+                    </el-table>
+                    <el-row>
+                        <el-col-24>
+                            <el-pagination background
+                                           @size-change="handleSizeChange"
+                                           @current-change="handleCurrentChange"
+                                           layout="total, sizes, prev, pager, next, jumper"
+                                           :total="show.tableData.length"
+                                           :page-sizes="[20, 50, 100]"
+                                           :page-size="page_size"
+                                           style="float: right"></el-pagination>
+                        </el-col-24>
+                    </el-row>
+
+                </template>
+            </div>
+
+        </el-main>
+
+
+    </el-container>
+</div>
+
+</body>
+<script src="report/vue.min.js"></script>
+<script src="report/index.js"></script>
+<script src="report/en.js"></script>
+<script>
+    ELEMENT.locale(ELEMENT.lang.en);
+    new Vue({
+        el: '#app',
+        data: function () {
+            return {
+
+                'summary': {},
+                'show': {},
+                'sort_info': {},
+                'page_size': 20,
+                'show_detail': [],
+                'page': 1,
+                'search': '',
+                'show_beautiful_name': '',
+            }
+        },
+        created: function () {
+            this.show = JSON.parse(JSON.stringify(this.table[0]));
+            this.refresh_table();
+            this.beautify_name();
+        },
+        methods: {
+            handle_change_select(name) {
+                for (var i = 0; i < this.table.length; i++) {
+                    if (name === this.table[i].name) {
+                        this.show = JSON.parse(JSON.stringify(this.table[i]));
+                    }
+                }
+                this.page = 1;
+                this.refresh_table();
+                this.search = '';
+                this.beautify_name();
+            },
+
+            handle_switch_nav(name) {
+                this.handle_change_select(name);
+            },
+
+            sort_data(prop, order) {
+                return function (a, b) {
+                    if (order === 'ascending') {
+                        if (a[prop] === '') {
+                            return -1;
+                        }
+                        if (a[prop] > b[prop]) {
+                            return 1;
+                        }
+                    } else {
+                        return -1;
+                    }
+                }
+            },
+
+            switch_sort_info(new_info) {
+                // console.log(new_info);
+                this.sort_info = new_info;
+                if (new_info.prop == null || new_info.order == null) {
+                    // console.log('in');
+                    for (var i = 0; i < this.table.length; i++) {
+                        if (this.show.name === this.table[i].name) {
+                            // this.show = this.table[i];
+                            this.show.tableData = this.table[i].tableData.slice(0);
+                            // console.log('in in ');
+                            // console.log(this.table[i].tableData);
+                            break;
+                        }
+                    }
+                } else {
+                    this.show.tableData.sort(this.sort_data(new_info.prop, new_info.order));
+                }
+                // console.log(this.show.tableData);
+                this.refresh_table();
+                // console.log(this.show_detail);
+            },
+
+            handleSizeChange(val) {
+                // console.log(`每页 ${val} 条`);
+                this.page_size = val;
+                this.refresh_table();
+            },
+
+            handleCurrentChange(val) {
+                // console.log(`当前页: ${val}`);
+                this.page = val;
+                this.refresh_table();
+            },
+
+            refresh_table() {
+                this.show_detail = this.show.tableData.slice(
+                    this.page_size * (this.page - 1), this.page_size * (this.page)
+                )
+            },
+
+            filter_table(item) {
+                for (var key in item) {
+                    if (item.hasOwnProperty(key)) {
+                        if (String(item[key]).toLowerCase().includes(this.search.toLowerCase())) {
+                            return true;
+                        }
+                    }
+
+                }
+                return false;
+            },
+
+            search_filter() {
+                var all_data = [];
+                for (var i = 0; i < this.table.length; i++) {
+                    if (this.show.name === this.table[i].name) {
+                        all_data = this.table[i].tableData.slice(0);
+                        break;
+                    }
+                }
+                this.show.tableData = all_data.filter(this.filter_table);
+                this.refresh_table();
+            },
+
+            beautify_name() {
+                this.show_beautiful_name = this.show.name.replace(/_/g, ' ').toUpperCase();
+            },
+        },
+        watch: {
+            search: function () {
+                if (this.search.length !== 0) {
+                    this.search_filter();
+                } else {
+                    for (var i = 0; i < this.table.length; i++) {
+                        if (this.show.name === this.table[i].name) {
+                            this.show.tableData = this.table[i].tableData.slice(0);
+                            break;
+                        }
+                    }
+                }
+            },
+        },
+        computed: {}
+    });
+    // console.log(data.$data.table);
+</script>
+
+</html>

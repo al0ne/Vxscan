@@ -1,11 +1,10 @@
 # coding=utf-8
 
 import re
-from lib.settings import PASS
 
 apps = None
-ports = ['DNS:53', 'http:7001', 'ssh:22']
-vuln = ['http', 'weblogic', '7001']
+ports = ['CDN:0']
+vuln = ['27017', 'Mongodb']
 
 
 def verify(vuln, port, apps):
@@ -44,13 +43,17 @@ def get_list(ip, ports):
             url = server + '://' + ip + ':' + port
             url = re.sub(r':443$', '', url)
             result.append(url)
-
+    
     return result
 
 
-def get_hosts(ip, USER):
+def get_hosts(ip, username):
     result = []
-    for name in USER:
-        for passwd in PASS:
+    password = []
+    with open('data/password.txt', 'r', encoding='UTF-8') as f:
+        for i in f.readlines():
+            password.append(i.strip())
+    for name in username:
+        for passwd in password:
             result.append('{}|{}|{}'.format(ip, name, passwd))
     return result

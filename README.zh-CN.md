@@ -1,41 +1,52 @@
 [English](./README.md) | 简体中文  
-# Vxscan 1.0
-python3写的综合扫描工具，主要用来敏感文件探测(目录扫描与js泄露接口)，WAF/CDN识别，端口扫描，指纹/服务识别，操作系统识别，弱口令探测，POC扫描，SQL注入，绕过CDN，查询旁站等功能，主要用来甲方自测或乙方授权测试，请勿用来搞破坏。
+# Vxscan 2.0
+
+python3写的综合扫描工具，主要用来敏感文件探测(目录扫描与js泄露接口)，WAF/CDN识别，端口扫描，指纹/服务识别，弱口令探测，POC扫描，SQL注入等功能。
 
 # Update  
+
+2019.7.19  
+添加了socks5全局代理
+封装了requests  
+优化了目录结构  
+删除了原来html报告，采用了从Perun里抽取的html报表  
+去掉了json结果输出，调整为存储到sqllite3数据库中，入库时进行去重，扫描时如果目标主机已存在db文件中则跳过  
+添加了phpinfo、leaks常见的信息泄露扫描插件  
+pdns加入viewdns.info接口    
 2019.7.1  
 显示ping检测失败的主机  
--u命令可以添加多个目标，用逗号隔开  
+-u 命令可以添加多个目标，用逗号隔开  
 修复指纹识别报错问题  
 2019.6.18  
 修复了指纹识别iis网站报错的问题，修改了apps.json  
 删除了一些容易引起错误的第三方库与脚本  
 扫描如果出现一闪而过就完成，那是因为程序首先检测dns解析与ping操作  
-第一次用Vxscan时，fake_useragent会加载这里的 https://fake-useragent.herokuapp.com/browsers/0.1.11 的ua列表，可能会出现加载超时错误  
+第一次用Vxscan时，fake_useragent会加载这里的 https://fake-useragent.herokuapp.com/browsers/0.1.11 的ua列表，可能会出现加载超时错误
 
 Requirements
 --------
 
 Python version > 3.6    
-requests  
-tqdm  
+requests    
 pyfiglet  
 fake-useragent  
-beautifulsoup4      
+beautifulsoup4  
+pycrypto  
+paramiko  
 geoip2  
-tldextract      
+tldextract  
+pymysql  
+pymssql  
 python-nmap  
 geoip2  
 tldextract  
 lxml  
 pymongo  
+psycopg2  
 virustotal_python  
-apt install libpq-dev nmap  
-wget https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz  
-解压后将里面的GeoLite2-City.mmdb放到vxscan/db/GeoLite2-City.mmdb  
-wget https://geolite.maxmind.com/download/geoip/database/GeoLite2-ASN.tar.gz  
-解压后将里面的GeoLite2-ASN.mmdb放到vxscan/db/GeoLite2-ASN.mmdb  
-pip3 install -r requirements.txt  
+apt install libpq-dev nmap
+wget https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz -o db/GeoLite2-City.mmdb  
+pip3 install -r requirements.txt
 
 Features
 --------
@@ -65,10 +76,6 @@ optional arguments:
   -u URL, --url URL     Start scanning this url -u xxx.com  
   -i INET, --inet INET  cidr eg. 1.1.1.1 or 1.1.1.0/24  
   -f FILE, --file FILE  read the url from the file  
-  -t THREADS, --threads THREADS  
-                        Set scan thread, default 150  
-  -e EXT, --ext EXT     Set scan suffix, -e php,asp  
-  -w WORD, --word WORD  Read the dict from the file  
 ```  
 
 **1. 扫描一个网站**  
@@ -77,8 +84,6 @@ optional arguments:
 ```python3 vxscan.py -f hosts.txt```  
 **3. 扫描一个C段**  
 ```python3 vxscan.py -i 127.0.0.0/24```  
-**4. 设置线程100,组合只用php后缀，使用自定义字典**  
-```python3 vxscan.py -u http://www.xxx.com -e php -t 100 -w ../dict.txt```  
 
 Structure
 --------
@@ -88,31 +93,161 @@ Structure
 ├─db
 │  ├─apps.json  Web指纹信息
 │  ├─apps.txt  Web指纹信息(WEBEYE)
-│  ├─password.txt  密码字典
-├─report    报告目录
+│  ├─GeoLite2-ASN.mmdb      geoip
+│  ├─GeoLite2-City.mmdb     asn
+├─doc    存放一些图片或者文档资源
+├─report    html报告相关内容
 ├─lib       
 │  ├─common.py    判断CDN、端口扫描、POC扫描等
-│  ├─color.py   终端颜色输出
+│  ├─color.py    终端颜色输出
+│  ├─cli_output.py   终端输出
 │  ├─active.py   判断dns解析与ping ip存活
 │  ├─save_html.py     生成html报表
 │  ├─waf.py     waf规则
+│  ├─options.py     选项设置
+│  ├─iscdn.py     根据ip段和asn范围来判断IP是不是CDN
 │  ├─osdetect.py   操作系统版本识别
 │  ├─random_header.py   自定义header头
-│  ├─scan_port.py        端口扫描脚本
-│  ├─jsparse.py      抓取网站js连接，分析ip地址，链接，Email等
 │  ├─settings.py      设置脚本
-│  ├─pyh.py     生成html
-│  ├─wappalyzer.py    指纹识别脚本
-│  ├─sql_injection.py    抓取网站连接，测试SQL注入脚本
+│  ├─vuln.py      批量调用POC扫描
+│  ├─url.py     对抓取的连接进行去重
+│  ├─verify.py     script脚本提供验证接口
+│  ├─sqldb.py      所有与sqlite3有关的都在这里
+│  ├─Requests.py   封装的requests库，做一些自定义设置
 ├─script  
 │  ├─Poc.py         Poc脚本
 │  ├─......
+├─Plugins
+│  ├─ActiveReconnaissance
+│    ├─active.py         判断主机存活并且验证dns解析
+│    ├─check_waf.py      判断网站waf
+│    ├─crawk.py         抓取网站连接并测试
+│    ├─osdetect.py      操作系统识别
+│  ├─InformationGathering
+│    ├─geoip.py         地理位置查询
+│    ├─js_leaks.py      js信息泄露
+│  ├─PassiveReconnaissance
+│    ├─ip_history.py        pdns接口
+│    ├─reverse_domain.py    旁站查询
+│    ├─virustotal.py        VT Pdns查询
+│    ├─wappalyzer.py      CMS被动指纹识别
+│  ├─Scanning
+│    ├─dir_scan     目录扫描
+│    ├─port_scan    端口扫描
+│  ├─Vulnerability
+│    ├─lfi_sqli     Sql注入、LFI检测
 ├─requirements.txt
+├─report.py         html 报告生成
 ├─logo.jpg
 ├─error.log
 
 ```
+SETTING
+--------
+```python
+# coding=utf-8
 
+# 全局超时时间
+TIMEOUT = 5
+
+# 要排除的状态吗
+BLOCK_CODE = [
+    301, 403, 308, 404, 405, 406, 408, 411, 417, 429, 493, 502, 503, 504, 999
+]
+# 设置扫描线程
+THREADS = 100
+# 要排除的 内容类型
+BLOCK_CONTYPE = [
+    'image/jpeg', 'image/gif', 'image/png', 'application/javascript',
+    'application/x-javascript', 'text/css', 'application/x-shockwave-flash',
+    'text/javascript', 'image/x-icon'
+]
+
+# 是否跳过目录扫描
+SCANDIR = True
+
+# 是否启动POC插件
+POC = True
+
+# 如果存在于结果db中就跳过
+CHECK_DB = False
+
+# 无效的404页面
+PAGE_404 = [
+    'page_404"', "404.png", '找不到页面', '页面找不到', "Not Found", "访问的页面不存在",
+    "page does't exist", 'notice_404', '404 not found', '<title>错误</title>', '内容正在加载', '提示：发生错误', '<title>网站防火墙',
+    '无法加载控制器'
+]
+
+# ping探测
+PING = True
+
+# 设置代理
+# SOCKS5 = ('127.0.0.1', 1080)
+SOCKS5 = ()
+
+# shodan
+SHODAN_API = ''
+
+# VT接口
+VIRUSTOTAL_API = ''
+
+# 设置cookie
+COOKIE = {'Cookie': 'test'}
+
+```
+POC
+--------
+**1. 根据端口开放或者指纹识别结果来调用POC**  
+在script目录下新建python文件，定义好check函数，传进来的参数主要是ip地址、端口列表、指纹识别列表，然后将结果return回去：
+```python
+import pymongo
+from lib.verify import verify
+
+timeout = 2
+vuln = ['27017', 'Mongodb']
+
+def check(ip, ports, apps):
+    # verify用来验证扫描列表中是否有Mongodb相关的结果，如果端口没有开启则不进行扫描
+    if verify(vuln, ports, apps):
+        try:
+            conn = pymongo.MongoClient(host=ip, port=27017, serverSelectionTimeoutMS=timeout)
+            database_list = conn.list_database_names()
+            if not database_list:
+                conn.close()
+                return
+            conn.close()
+            return '27017 MongoDB Unauthorized Access'
+        except Exception as e:
+            pass
+```
+**2. 在目标IP开放的每个HTTP端口上遍历一遍**   
+根据传递过来的端口服务列表生成要扫描的url，然后在每个web端口中去访问一遍，下面脚本会获取ip每个http端口的标题  
+```python
+from lib.verify import get_list
+from lib.random_header import HEADERS
+from lxml import etree
+import requests
+
+def get_title(url):
+    try:
+        r = requests.get(url, headers=HEADERS, timeout=3, verify=False)
+        html = etree.HTML(r.text)
+        title = html.xpath('//title/text()')
+        return url + ' | ' + title[0]
+    except:
+        pass
+
+
+def check(ip, ports, apps):
+    result = []
+    probe = get_list(ip, ports)
+    for i in probe:
+        out = get_title(i)
+        if out:
+            result.append(out)
+    return result
+```
 Waf/CDN list
 --------
 360  
@@ -205,170 +340,11 @@ yunsuo
 
 Output
 --------
-以下是AWVS扫描器测试网站结果  
-![image](https://github.com/al0ne/A-hunter/raw/master/logo.jpg)
-![image](https://github.com/al0ne/A-hunter/raw/master/logo2.jpg)
-
-```
-
-[
-    {
-        "testphp.vulnweb.com": {
-            "WAF": "NoWAF",
-            "Webinfo": {
-                "apps": [
-                    "Nginx",
-                    "PHP",
-                    "DreamWeaver",
-                    "php"
-                ],
-                "title": "Home of Acunetix Art",
-                "server": "nginx/1.4.1",
-                "pdns": [
-                    "176.28.50.165 : 2019-06-09 02:05:52"
-                ],
-                "reverseip": [
-                    "176.28.50.165",
-                    "rs202995.rs.hosteurope.de",
-                    "testhtml5.vulnweb.com",
-                    "testphp.ingensec.ch",
-                    "testphp.ingensec.com",
-                    "testphp.ingensec.fr",
-                    "testphp.vulnweb.com",
-                    "vulnweb.com",
-                    "www.vulnweb.com"
-                ]
-            },
-            "Ports": [
-                "IMAPS:993",
-                "ssh:22",
-                "imap:143",
-                "http:80",
-                "Unknown:8880",
-                "pop:110",
-                "POP3:995",
-                "smtp:25",
-                "Unknown:8443",
-                "SMTPS:465",
-                "DNS:53",
-                "ftp:21"
-            ],
-            "Ipaddr": "176.28.50.165",
-            "Address": "德国  ",
-            "Vuln": [
-                "http://testphp.vulnweb.com | Home of Acunetix Art",
-                "MySQL SQLi:http://testphp.vulnweb.com/search.php?test=query",
-                "MySQL SQLi:http://testphp.vulnweb.com/artists.php?artist=1",
-                "MySQL SQLi:http://testphp.vulnweb.com/listproducts.php?cat=2"
-            ],
-            "URLS": [
-                {
-                    "rsp_code": 200,
-                    "rsp_len": 12473,
-                    "title": "None",
-                    "contype": "xml",
-                    "url": "/.idea/workspace.xml"
-                },
-                {
-                    "rsp_code": 200,
-                    "rsp_len": 1,
-                    "title": "None",
-                    "contype": "plain",
-                    "url": "/CVS/Root"
-                },
-                {
-                    "rsp_code": 200,
-                    "rsp_len": 4732,
-                    "title": "search",
-                    "contype": "html",
-                    "url": "/search.php"
-                },
-                {
-                    "rsp_code": 200,
-                    "rsp_len": 1,
-                    "title": "None",
-                    "contype": "plain",
-                    "url": "/CVS/Entries"
-                },
-                {
-                    "rsp_code": 200,
-                    "rsp_len": 3265,
-                    "title": "Home of WASP Art",
-                    "contype": "plain",
-                    "url": "/index.bak"
-                },
-                {
-                    "rsp_code": 200,
-                    "rsp_len": 143,
-                    "title": "None",
-                    "contype": "xml",
-                    "url": "/.idea/scopes/scope_settings.xml"
-                },
-                {
-                    "rsp_code": 200,
-                    "rsp_len": 3265,
-                    "title": "Home of WASP Art",
-                    "contype": "zip",
-                    "url": "/index.zip"
-                },
-                {
-                    "rsp_code": 200,
-                    "rsp_len": 275,
-                    "title": "None",
-                    "contype": "xml",
-                    "url": "/.idea/modules.xml"
-                },
-                {
-                    "rsp_code": 200,
-                    "rsp_len": 5523,
-                    "title": "login page",
-                    "contype": "html",
-                    "url": "/login.php"
-                },
-                {
-                    "rsp_code": 200,
-                    "rsp_len": 278,
-                    "title": "Index of /admin/",
-                    "contype": "html",
-                    "url": "/admin/"
-                },
-                {
-                    "rsp_code": 200,
-                    "rsp_len": 224,
-                    "title": "None",
-                    "contype": "xml",
-                    "url": "/crossdomain.xml"
-                },
-                {
-                    "rsp_code": 302,
-                    "rsp_len": 14,
-                    "title": "None",
-                    "contype": "html",
-                    "url": "/userinfo.php"
-                },
-                {
-                    "rsp_code": 200,
-                    "rsp_len": 6,
-                    "title": "None",
-                    "contype": "plain",
-                    "url": "/.idea/.name"
-                },
-                {
-                    "rsp_code": 200,
-                    "rsp_len": 4958,
-                    "title": "Home of Acunetix Art",
-                    "contype": "html",
-                    "url": "/index.php"
-                }
-            ]
-        }
-    }
-]
-```
+![image](https://raw.githubusercontent.com/al0ne/Vxscan/master/logo.jpg)
+![image](https://raw.githubusercontent.com/al0ne/Vxscan/master/logo2.jpg)
 
 Note
 ------
-参考了cnnetarmy Srchunter设计思路  
 参考了brut3k1t的弱口令模块：  
 https://github.com/ex0dus-0x/brut3k1t  
 指纹识别主要调用Wappalyzer与WebEye：  
@@ -386,6 +362,9 @@ js敏感信息正则提取参考了：
 https://github.com/nsonaniya2010/SubDomainizer  
 WAF判断使用的是waf00f与whatwaf的判断规则：  
 https://github.com/EnableSecurity/wafw00f  
-https://github.com/Ekultek/WhatWaf   
- 
+https://github.com/Ekultek/WhatWaf  
+html报告使用了：  
+https://github.com/WyAtu/Perun
+https://github.com/ly1102   
+
 **请使用者遵守《中华人民共和国网络安全法》，勿用于非授权测试，如作他用所承受的法律责任一概与作者无关，下载使用即代表使用者同意上述观点**。

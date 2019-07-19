@@ -11,3 +11,4 @@ tldextract
 lxml
 pymongo
 virustotal_python
+dnspython

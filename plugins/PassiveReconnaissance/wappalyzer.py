@@ -50,7 +50,7 @@ class WebPage(object):
     def check(self):
         out = []
         apps = []
-        with open('db/apps.txt', 'r') as f:
+        with open('data/apps.txt', 'r') as f:
             for i in f.readlines():
                 apps.append(i.strip('\n'))
         
@@ -81,6 +81,18 @@ class WebPage(object):
             security.append('X-XSS-Protection')
         if self.headers.get('Strict-Transport-Security'):
             security.append('Strict-Transport-Security')
+        if self.headers.get('x-hacker'):
+            security.append('x-hacker')
+        if self.headers.get('x-content-type-options'):
+            security.append('x-content-type-options')
+        if self.headers.get('x-frame-options'):
+            security.append('x-frame-options')
+        if self.headers.get('Access-Control-Allow-Origin'):
+            security.append('Access-Control-Allow-Origin')
+        if self.headers.get('Referrer-Policy'):
+            security.append('Referrer-Policy')
+        if self.headers.get('HSTS'):
+            security.append('HSTS')
         return {
             "apps": list(set(result)),
             "title": self.title,
@@ -110,7 +122,7 @@ class Wappalyzer(object):
             with open(apps_file, 'rb') as fd:
                 obj = json.load(fd)
         else:
-            with open("db/apps.json", 'rb') as fd:
+            with open("data/apps.json", 'rb') as fd:
                 obj = json.load(fd)
         
         self.categories = obj['categories']
@@ -210,24 +222,19 @@ class Wappalyzer(object):
         
         def __get_implied_apps(apps):
             _implied_apps = set()
-            try:
-                for app in apps:
-                    if 'implies' in self.apps[app]:
-                        _implied_apps.update(set(self.apps[app]['implies']))
-                return _implied_apps
-            except:
-                pass
+            for app in apps:
+                if 'implies' in self.apps[app]:
+                    _implied_apps.update(set(self.apps[app]['implies']))
+            return _implied_apps
         
         implied_apps = __get_implied_apps(detected_apps)
         all_implied_apps = set()
         
         # Descend recursively until we've found all implied apps
-        try:
-            while not all_implied_apps.issuperset(implied_apps):
-                all_implied_apps.update(implied_apps)
-                implied_apps = __get_implied_apps(all_implied_apps)
-        except:
-            pass
+        while not all_implied_apps.issuperset(implied_apps):
+            all_implied_apps.update(implied_apps)
+            implied_apps = __get_implied_apps(all_implied_apps)
+        
         return all_implied_apps
     
     def get_categories(self, app_name):

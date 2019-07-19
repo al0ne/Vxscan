@@ -4,7 +4,7 @@ import ipaddress
 import re
 import geoip2.database
 
-# 通过VT查询pdns，然后排除国内外常见的cdn段，如果出现极有可能是真实ip
+# 通过查询pdns，然后排除国内外常见的cdn段，如果出现极有可能是真实ip
 cdns = ['173.245.48.0/20', '103.21.244.0/22', '103.22.200.0/22', '103.31.4.0/22', '141.101.64.0/18',
         '108.162.192.0/18',
         '190.93.240.0/20', '188.114.96.0/20', '197.234.240.0/22', '198.41.128.0/17', '162.158.0.0/15',
@@ -70,7 +70,7 @@ def iscdn(host):
         if (ipaddress.ip_address(host) in ipaddress.ip_network(cdn)):
             result = False
     try:
-        with geoip2.database.Reader('db/GeoLite2-ASN.mmdb') as reader:
+        with geoip2.database.Reader('data/GeoLite2-ASN.mmdb') as reader:
             response = reader.asn(host)
             for i in ASNS:
                 if response.autonomous_system_number == int(i):
