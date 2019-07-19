@@ -340,8 +340,9 @@ yunsuo
 
 Output
 --------
-![image](https://raw.githubusercontent.com/al0ne/Vxscan/master/logo.jpg)
-![image](https://raw.githubusercontent.com/al0ne/Vxscan/master/logo2.jpg)
+![image](https://github.com/al0ne/Vxscan/raw/master/doc/logo.jpg)
+![image](https://github.com/al0ne/Vxscan/raw/master/doc/logo2.jpg)
+![image](https://github.com/al0ne/Vxscan/raw/master/doc/logo3.jpg)
 
 Note
 ------
