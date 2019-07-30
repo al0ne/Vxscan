@@ -49,22 +49,49 @@ pip3 install -r requirements.txt
 
 Features
 --------
-Generate a dictionary list using Cartesian product method, support custom dictionary list  
-Random UserAgent, XFF, X-Real-IP  
-Customize 404 page recognition, access random pages and then compare the similarities through difflib to identify custom 302 jumps  
-When scanning the directory, first detect the http port and add multiple http ports of one host to the scan target.  
-Filter invalid Content-Type, invalid status?  
-WAF/CDN detection  
-Use the socket to send packets to detect common ports and send different payload detection port service fingerprints.  
-Hosts that encounter full port open (portspoof) automatically skip  
-Call wappalyzer.json and WebEye to determine the website fingerprint  
-It is detected that the CDN or WAF website automatically skips  
-Call nmap to identify the operating system fingerprint  
-Call weak password detection script based on port open (FTP/SSH/TELNET/Mysql/MSSQL...)  
-Call POC scan based on fingerprint identification or port, or click on the open WEB port of IP  
-Analyze sensitive asset information (domain name, mailbox, apikey, password, etc.) in the js file  
-Grab website connections, test SQL injection, LFI, etc.  
-Call some online interfaces to obtain information such as VT, www.yougetsignal.com and other websites, determine the real IP through VT pdns, and query the website by www.yougetsignal.com and api.hackertarget.com.     
+ - Webinfo
+    + GeoIP
+    + DNS resolution verification
+    + Ping survival verification
+    - WAF/CDN detection
+        + WAF Rules
+        + CDN IP segment
+        + CDN ASN
+    + HTTP header
+    + HTTP Server
+    + HTTP Headers
+    - Fingerprint recognition
+        + Wappalyzer
+        + WEBEYE
+    - PDNS
+        + virustotal
+        + viewdns.info
+    - Reverse domain
+        + yougetsignal.com
+        + api.hackertarget.com
+    + Operating system version detection (nmap)
+ - Ports
+    + 400+ Ports
+    + Skip CDN IP
+    + Full port open host (portspoof) automatically skips
+ - URLS
+    + Common backup, backdoor, directory, middleware, sensitive file address
+    + Generate a dictionary list using Cartesian product
+    + Random UserAgent, XFF, X-Real-IP, Referer
+    + Custom 404 page recognition (page similarity, page keyword)
+    + Identify custom 302 jumps
+    + Filter invalid Content-Type, invalid status?
+    + save url, title, contype, rsp_len, rsp_code
+ - Vuln
+    + Add multiple HTTP ports from one host to the POC target
+    + Call POC based on fingerprint and port service
+    + Unauthorized, deserialized, RCE, Sqli...
+ - Report
+    + Results are stored in the Sqlite3 database
+    + Inbound deduplication, detected that existing items will not be scanned
+    + Generate html report
+
+  
 
 Usage
 --------
@@ -195,6 +222,58 @@ VIRUSTOTAL_API = ''
 # cookie
 COOKIE = {'Cookie': 'test'}
 ```
+POC
+--------
+**1. Call POC based on port open or fingerprint recognition results**  
+Create a new python file in the script directory, define the check function, the parameters passed in are mainly the ip address, port list, fingerprint identification list, and then return the result:
+```python
+import pymongo
+from lib.verify import verify
+
+timeout = 2
+vuln = ['27017', 'Mongodb']
+
+def check(ip, ports, apps):
+    # Verify is used to verify if there is a Mongodb related result in the scan list. If the port is not open, it will not be scanned.
+    if verify(vuln, ports, apps):
+        try:
+            conn = pymongo.MongoClient(host=ip, port=27017, serverSelectionTimeoutMS=timeout)
+            database_list = conn.list_database_names()
+            if not database_list:
+                conn.close()
+                return
+            conn.close()
+            return '27017 MongoDB Unauthorized Access'
+        except Exception as e:
+            pass
+```
+**2. Traversing on each HTTP port where the target IP is open**   
+Generate the url to be scanned according to the list of port services passed, and then visit it in each web port. The following script will get the title of each http port of ip.  
+```python
+from lib.verify import get_list
+from lib.random_header import HEADERS
+from lxml import etree
+import requests
+
+def get_title(url):
+    try:
+        r = requests.get(url, headers=HEADERS, timeout=3, verify=False)
+        html = etree.HTML(r.text)
+        title = html.xpath('//title/text()')
+        return url + ' | ' + title[0]
+    except:
+        pass
+
+
+def check(ip, ports, apps):
+    result = []
+    probe = get_list(ip, ports)
+    for i in probe:
+        out = get_title(i)
+        if out:
+            result.append(out)
+    return result
+```
 
 Waf/CDN list
 --------
@@ -295,8 +374,6 @@ The following is the AWVS scanner test website results
 
 Note
 ------
-Refer to the weak password module of brut3k1t:  
-Https://github.com/ex0dus-0x/brut3k1t  
 Fingerprint recognition mainly calls Wappalyzer and WebEye:  
 https://github.com/b4ubles/python3-Wappalyzer  
 https://github.com/zerokeeper/WebEye  
@@ -306,8 +383,6 @@ POC-T https://github.com/Xyntax/POC-T/tree/2.0/script
 Perun https://github.com/WyAtu/Perun  
 Refer to the anthx port scan, service judgment:  
 https://raw.githubusercontent.com/AnthraX1/InsightScan/master/scanner.py  
-Injecting the crawler reference:  
-DSSS https://github.com/stamparm/DSSS  
 Js sensitive information regular extraction reference:  
 https://github.com/nsonaniya2010/SubDomainizer  
 WAF judges the use of waf00f and whatwaf judgment rules:  
