@@ -43,7 +43,7 @@ def gen_webinfo():
         
         return data
     except Exception as e:
-        print(e)
+        pass
 
 
 def gen_ports():
@@ -68,7 +68,7 @@ def gen_ports():
         
         return data
     except Exception as e:
-        print(e)
+        pass
 
 
 def gen_urls():
@@ -98,7 +98,7 @@ def gen_urls():
         }
         return data
     except Exception as e:
-        print(e)
+        pass
 
 
 def gen_vuln():
