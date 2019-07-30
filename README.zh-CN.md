@@ -44,28 +44,54 @@ lxml
 pymongo  
 psycopg2  
 virustotal_python  
-apt install libpq-dev nmap
+apt install libpq-dev nmap  
 wget https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz -o db/GeoLite2-City.mmdb  
-pip3 install -r requirements.txt
+pip3 install -r requirements.txt  
 
 Features
 --------
-使用笛卡尔乘积方式生成字典列表，支持自定义字典列表  
-随机的UserAgent、XFF、X-Real-IP  
-自定义404页面识别，访问随机页面然后通过difflib对比相似度，识别自定义302跳转  
-扫描目录时先探测http端口，将一个主机多个http端口加入到扫描目标中  
-过滤无效Content-Type，无效状态吗  
-WAF/CDN探测  
-使用socket发包探测常见端口，发送不同payload探测端口服务指纹   
-遇到全端口开放的主机(portspoof)自动跳过   
-调用wappalyzer.json与WebEye判断网站指纹   
-检测到CDN或者WAF网站自动跳过  
-调用nmap识别操作系统指纹  
-根据端口开放调用弱口令探测脚本(FTP/SSH/TELNET/Mysql/MSSQL...)  
-根据指纹识别或者端口调用POC扫描,或将IP开放的WEB端口上打一遍     
-分析js文件里面的敏感资产信息(域名、邮箱、apikey、password等)   
-抓取网站连接，测试SQL注入，LFI等  
-调用一些在线接口获取信息例如VT、www.yougetsignal.com等网站，通过VT pdns判断真实IP,通过www.yougetsignal.com、api.hackertarget.com查询网站旁站      
+ - Webinfo
+    + GeoIP
+    + DNS 解析验证
+    + Ping 存活验证
+    - WAF/CDN 探测
+        + WAF Rules
+        + CDN IP段
+        + CDN ASN
+    + HTTP 标题
+    + HTTP Server
+    + HTTP Headers
+    - 指纹识别
+        + Wappalyzer
+        + WEBEYE
+    - PDNS
+        + virustotal
+        + viewdns.info
+    - 旁站查询
+        + yougetsignal.com
+        + api.hackertarget.com
+    + 操作系统版本探测 (nmap)
+ - Ports
+    + 400+ Ports
+    + 跳过CDN IP
+    + 全端口开放的主机(portspoof)自动跳过
+ - URLS
+    + 常见备份、后门、目录、中间件、敏感文件地址
+    + 使用笛卡尔乘积方式生成字典列表
+    + 随机的UserAgent、XFF、X-Real-IP、Referer
+    + 自定义404页面识别 (页面相似度、页面关键词)
+    + 识别自定义302跳转
+    + 过滤无效Content-Type，无效状态吗
+    + 保存url、title、contype、rsp_len、rsp_code
+ - Vuln
+    + 将一个主机多个HTTP端口加入POC目标
+    + 根据指纹、端口服务来调用POC
+    + 未授权、反序列化、RCE、Sqli...
+ - Report
+    + 结果存入Sqlite3数据库
+    + 入库去重，检测到已有项目将不在扫描
+    + 生成html报告
+   
 
 Usage
 --------
@@ -346,8 +372,6 @@ Output
 
 Note
 ------
-参考了brut3k1t的弱口令模块：  
-https://github.com/ex0dus-0x/brut3k1t  
 指纹识别主要调用Wappalyzer与WebEye：  
 https://github.com/b4ubles/python3-Wappalyzer  
 https://github.com/zerokeeper/WebEye  
@@ -357,8 +381,6 @@ POC-T https://github.com/Xyntax/POC-T/tree/2.0/script
 Perun https://github.com/WyAtu/Perun   
 参考了anthx的端口扫描、服务判断：
 https://raw.githubusercontent.com/AnthraX1/InsightScan/master/scanner.py  
-注入爬虫参考了：  
-DSSS https://github.com/stamparm/DSSS  
 js敏感信息正则提取参考了：  
 https://github.com/nsonaniya2010/SubDomainizer  
 WAF判断使用的是waf00f与whatwaf的判断规则：  
