@@ -1,5 +1,12 @@
-English | [简体中文](./README.zh-CN.md)  
 # Vxscan 2.0
+
+[![Build Status](https://api.travis-ci.org/al0ne/Vxscan.svg?branch=master)](https://travis-ci.org/al0ne/Vxscan)
+[![ISSUE](https://img.shields.io/github/issues/al0ne/Vxscan)](https://github.com/al0ne/Vxscan/issues)
+[![star](https://img.shields.io/github/stars/al0ne/Vxscan)](./)
+[![license](https://img.shields.io/github/license/al0ne/Vxscan)](https://github.com/al0ne/Vxscan/blob/master/LICENSE)
+[![python](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8-blue)](./)
+
+English | [简体中文](./README.zh-CN.md)  
 
 Python3 comprehensive scanning tool, mainly used for sensitive file detection (directory scanning and js leak interface), WAF/CDN identification, port scanning, fingerprint/service identification, operating system identification, weak password detection, POC scanning, SQL injection, winding Pass CDN, check the next station
 
