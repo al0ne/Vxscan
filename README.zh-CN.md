@@ -1,5 +1,12 @@
-[English](./README.md) | 简体中文  
 # Vxscan 2.0
+
+[![Build Status](https://api.travis-ci.org/al0ne/Vxscan.svg?branch=master)](https://travis-ci.org/al0ne/Vxscan)
+[![ISSUE](https://img.shields.io/github/issues/al0ne/Vxscan)](https://github.com/al0ne/Vxscan/issues)
+[![star](https://img.shields.io/github/stars/al0ne/Vxscan)](./)
+[![license](https://img.shields.io/github/license/al0ne/Vxscan)](https://github.com/al0ne/Vxscan/blob/master/LICENSE)
+[![python](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8-blue)](./)  
+
+[English](./README.md) | 简体中文  
 
 python3写的综合扫描工具，主要用来敏感文件探测(目录扫描与js泄露接口)，WAF/CDN识别，端口扫描，指纹/服务识别，弱口令探测，POC扫描，SQL注入等功能。
 
