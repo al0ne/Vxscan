@@ -7,6 +7,8 @@ WAF_RULE = (
     '360|headers|X-Powered-By-360wzb|wangzhan\.360\.cn',
     '360|headers|X-Powered-By|360',
     '360wzws|headers|Server|360wzws',
+    '360 AN YU|content|content|Sorry! your access has been intercepted by AnYu',
+    '360 AN YU|content|content|AnYu- the green channel',
     'Anquanbao|headers|X-Powered-By-Anquanbao|MISS',
     'Armor|headers|Server|armor',
     'BaiduYunjiasu|headers|Server|yunjiasu-nginx',
@@ -56,6 +58,7 @@ WAF_RULE = (
     'Safedog|headers|X-Powered-By|WAF/2\.0',
     'Safedog|headers|Server|Safedog',
     'Safedog|headers|Set-Cookie|Safedog',
+    'Safedog|content|content|404.safedog.cn/images/safedogsite/broswer_logo.jpg',
     'SonicWALL|headers|Server|SonicWALL',
     'ZenEdge Firewall|headers|Server|ZENEDGE',
     'WatchGuard|headers|Server|WatchGuard',
@@ -104,7 +107,9 @@ WAF_RULE = (
     'DenyALL WAF|content|content|Condition Intercepted',
     'yunsuo|content|content|<img class="yunsuologo"',
     'aesecure|content|content|aesecure_denied.png',
+    'aesecure|content|content|aesecure_denied.png',
     'aliyun|content|content|errors.aliyun.com',
+    'aliyun|content|content|cdn.aliyuncs.com',
     'aliyun|headers|Set-Cookie|aliyungf_tc=',
     'Palo Alto Firewall|content|content|has been blocked in accordance with company policy',
     'PerimeterX Firewall|content|content|https://www.perimeterx.com/whywasiblocked',
@@ -113,5 +118,4 @@ WAF_RULE = (
     'SonicWall|content|content|nsa_banner',
     'SonicWall|content|content|Web Site Blocked',
     'Sophos UTM Firewall|content|content|Powered by UTM Web Protection',
-    'd盾|content|content|D盾_拦截提示'
 )

@@ -15,7 +15,7 @@ def put(url):
         return 'HTTP METHOD PUT url: {}'.format(url)
 
 
-def check(ip, ports, apps):
+def check(url, ip, ports, apps):
     try:
         probe = get_list(ip, ports)
         for url in probe:

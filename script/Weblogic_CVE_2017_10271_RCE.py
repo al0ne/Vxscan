@@ -5,7 +5,7 @@ from lib.random_header import get_ua
 vuln = ['http', 'weblogic', '7001']
 
 
-def check(ip, ports, apps):
+def check(url, ip, ports, apps):
     if verify(vuln, ports, apps):
         HEADERS = get_ua()
         HEADERS.update({'Content-Type': 'text/xml'})
@@ -37,7 +37,7 @@ def check(ip, ports, apps):
             '''
         
         try:
-            r = requests.post(url, data=data, verify=False, timeout=5, headers=get_ua())
+            r = requests.post(url, data=data, verify=False, timeout=5, headers=HEADERS)
             text = r.text
         except Exception:
             text = ""

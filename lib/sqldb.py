@@ -4,6 +4,9 @@ import sqlite3
 import time
 import hashlib
 import sys
+import re
+import logging
+from lib.cli_output import console
 from lib.bcolors import bcolors
 from lib.url import parse_host
 
@@ -33,7 +36,6 @@ class Sqldb():
                 title varchar(255) DEFAULT '',
                 apps varchar(255) DEFAULT '',
                 server varchar(255) DEFAULT '',
-                security varchar(255) DEFAULT '',
                 address varchar(255) DEFAULT '',
                 ipaddr varchar(255) DEFAULT '',
                 os varchar(255) DEFAULT '',
@@ -44,7 +46,7 @@ class Sqldb():
                 """
             )
         except sqlite3.OperationalError as e:
-            print(e)
+            pass
     
     def create_ports(self):
         try:
@@ -57,12 +59,13 @@ class Sqldb():
                 ipaddr varchar(255),
                 service varchar(255) DEFAULT '',
                 port varchar(255) DEFAULT '',
+                banner varchar(255) DEFAULT '',
                 md5 varchar(40) UNIQUE
                 )
                 """
             )
         except Exception as e:
-            print(e)
+            pass
     
     def create_urls(self):
         try:
@@ -83,7 +86,7 @@ class Sqldb():
                 """
             )
         except Exception as e:
-            print(e)
+            logging.exception(e)
     
     def create_vuln(self):
         try:
@@ -102,13 +105,31 @@ class Sqldb():
         except:
             pass
     
+    def create_crawl(self):
+        try:
+            cursor = self.conn.cursor()
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS crawl (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                time varchar(255),
+                domain varchar(255),
+                type varchar(255) DEFAULT '',
+                leaks varchar(255) DEFAULT '',
+                md5 varchar(40) UNIQUE
+                )
+                """
+            )
+        except Exception as e:
+            logging.exception(e)
+    
     def insert_webinfo(self, query, values):
         try:
             cursor = self.conn.cursor()
             cursor.execute(query, values)
             self.commit()
         except Exception as e:
-            print(e)
+            logging.exception(e)
     
     def insert_ports(self, query, values):
         try:
@@ -116,21 +137,29 @@ class Sqldb():
             cursor.execute(query, values)
             self.commit()
         except Exception as e:
-            print(e)
+            logging.exception(e)
     
     def insert_urls(self, query, values):
         try:
             cursor = self.conn.cursor()
             cursor.execute(query, values)
         except Exception as e:
-            print(e)
+            logging.exception(e)
     
     def insert_vuln(self, query, values):
         try:
             cursor = self.conn.cursor()
             cursor.execute(query, values)
-        except:
-            pass
+        except Exception as e:
+            logging.exception(e)
+    
+    def insert_crawl(self, query, values):
+        try:
+            cursor = self.conn.cursor()
+            cursor.execute(query, values)
+            self.commit()
+        except Exception as e:
+            logging.exception(e)
     
     def get_urls(self, urls):
         self.create_urls()
@@ -160,7 +189,9 @@ class Sqldb():
         self.create_ports()
         timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         for i in ports:
-            service, port = i.split(':')
+            service = i.get('server')
+            port = i.get('port')
+            banner = i.get('banner')
             md5sum = hashlib.md5()
             strings = str(ipaddr) + str(service) + str(port)
             md5sum.update(strings.encode('utf-8'))
@@ -170,9 +201,10 @@ class Sqldb():
                 ipaddr,
                 service,
                 port,
+                banner,
                 md5
             )
-            query = "INSERT OR IGNORE INTO ports (time, ipaddr, service, port, md5) VALUES (?,?,?,?,?)"
+            query = "INSERT OR IGNORE INTO ports (time, ipaddr, service, port, banner,md5) VALUES (?,?,?,?,?,?)"
             self.insert_ports(query, values)
     
     def get_vuln(self, domain, vuln):
@@ -194,6 +226,34 @@ class Sqldb():
         self.commit()
         self.close()
     
+    def get_crawl(self, domain, crawl):
+        self.create_crawl()
+        timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        for i in crawl:
+            if 'Dynamic:' in i:
+                type = 'Dynamic link'
+            else:
+                type = 'Leaks'
+            md5sum = hashlib.md5()
+            try:
+                text = re.search(r'(?<=Email: ).*|(?<=Phone: ).*', i).group()
+            except:
+                text = str(i)
+            strings = str(domain) + text
+            md5sum.update(strings.encode('utf-8'))
+            md5 = md5sum.hexdigest()
+            values = (
+                timestamp,
+                domain,
+                type,
+                i,
+                md5
+            )
+            query = "INSERT OR IGNORE INTO crawl (time, domain, type, leaks, md5) VALUES (?,?,?,?,?)"
+            self.insert_crawl(query, values)
+        self.commit()
+        self.close()
+    
     def get_webinfo(self, webinfo):
         self.create_webinfo_db()
         timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
@@ -203,11 +263,6 @@ class Sqldb():
                 apps = ' , '.join(apps)
             else:
                 apps = None
-            security = v.get('Webinfo').get('security')
-            if not security:
-                security = None
-            else:
-                security = ' , '.join(security)
             reverse_ip = v.get('Webinfo').get('reverseip')
             if reverse_ip:
                 reverse_ip = ' , '.join(reverse_ip)
@@ -247,7 +302,6 @@ class Sqldb():
                 title,
                 apps,
                 server,
-                security,
                 address,
                 ipaddr,
                 os,
@@ -255,7 +309,7 @@ class Sqldb():
                 reverse_ip,
                 md5
             )
-            query = "INSERT OR IGNORE INTO webinfo (time, domain, waf, title, apps, server, security, address, ipaddr, os, pdns, reverseip,md5) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)"
+            query = "INSERT OR IGNORE INTO webinfo (time, domain, waf, title, apps, server, address, ipaddr, os, pdns, reverseip,md5) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)"
             self.insert_webinfo(query, values)
         self.commit()
         self.close()
@@ -273,11 +327,13 @@ class Sqldb():
                 if not values:
                     result.append(i)
                 else:
-                    sys.stdout.write(bcolors.OKGREEN + "{} In the db file\n".format(i) + bcolors.ENDC)
+                    console('CheckDB', i, 'In the db file\n')
+                    # sys.stdout.write(bcolors.OKGREEN + "{} In the db file\n".format(i) + bcolors.ENDC)
             except sqlite3.OperationalError:
                 return hosts
             except Exception as e:
                 error = True
+                logging.exception(e)
         self.commit()
         self.close()
         if error:
@@ -291,8 +347,10 @@ class Sqldb():
             cursor.execute(sql)
             values = cursor.fetchall()
             return values
-        except:
+        except sqlite3.OperationalError:
             pass
+        except Exception as e:
+            logging.exception(e)
         finally:
             self.commit()
             self.close()

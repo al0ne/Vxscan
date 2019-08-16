@@ -5,13 +5,14 @@
 import concurrent.futures
 import subprocess
 import re
-import sys
 import platform
 import dns.resolver
+import logging
 from urllib import parse
+from lib.cli_output import console
 from lib.sqldb import Sqldb
-from lib.bcolors import bcolors
 from lib.settings import PING, CHECK_DB
+
 
 class ActiveCheck():
     def __init__(self, hosts):
@@ -37,16 +38,21 @@ class ActiveCheck():
                     else:
                         subprocess.check_output(['ping', '-c 2', '-W 1', host])
                     self.out.append(url)
-                except Exception as e:
-                    sys.stdout.write(bcolors.OKGREEN + "{} is not alive\n".format(host) + bcolors.ENDC)
+                except subprocess.CalledProcessError:
+                    console('PING', host, "is not alive\n")
                     return False
+                except Exception as e:
+                    logging.exception(e)
+            
             else:
                 self.out.append(url)
+        except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN):
+            console('DnsCheck', host, "No A record\n")
         except Exception as e:
+            logging.exception(e)
             return False
     
     def pool(self):
-        sys.stdout.write(bcolors.RED + "Start Ping ...\n\n" + bcolors.ENDC)
         with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
             executor.map(self.check, self.hosts)
         if CHECK_DB:

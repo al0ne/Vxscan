@@ -6,7 +6,7 @@ from lib.verify import verify
 vuln = ['redis', '6379']
 
 
-def check(ip, ports, apps):
+def check(url, ip, ports, apps):
     if verify(vuln, ports, apps):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.settimeout(5)

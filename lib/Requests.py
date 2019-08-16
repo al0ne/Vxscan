@@ -4,7 +4,9 @@ from lib.random_header import get_ua
 from lib.settings import TIMEOUT, COOKIE, SOCKS5
 import requests
 import urllib3
+import logging
 import re
+import ssl
 import socks
 import socket
 
@@ -32,15 +34,45 @@ class Requests():
             url = 'http://' + url
         return url
     
+    def scan(self, url):
+        url = self._verify(url)
+        try:
+            r = self.session.get(url, timeout=self.timeout, headers=self.headers, verify=False, stream=True,
+                                 allow_redirects=False)
+        
+        except (requests.exceptions.ConnectTimeout,
+                requests.exceptions.ReadTimeout,
+                requests.exceptions.Timeout,
+                requests.exceptions.SSLError,
+                requests.exceptions.ConnectionError,
+                ssl.SSLError,
+                AttributeError,
+                ConnectionRefusedError,
+                socket.timeout):
+            pass
+        except Exception as e:
+            logging.exception(e)
+        
+        return r
+    
     def get(self, url):
         url = self._verify(url)
         try:
             r = self.session.get(url, timeout=self.timeout, headers=self.headers, verify=False, allow_redirects=False)
+        
         except (requests.exceptions.ConnectTimeout,
                 requests.exceptions.ReadTimeout,
                 requests.exceptions.Timeout,
+                requests.exceptions.SSLError,
+                requests.exceptions.ConnectionError,
+                ssl.SSLError,
+                AttributeError,
+                ConnectionRefusedError,
                 socket.timeout):
             pass
+        except Exception as e:
+            logging.exception(e)
+        
         return r
     
     def post(self, url, data):
@@ -51,8 +83,14 @@ class Requests():
         except (requests.exceptions.ConnectTimeout,
                 requests.exceptions.ReadTimeout,
                 requests.exceptions.Timeout,
+                ssl.SSLError,
+                requests.exceptions.ConnectionError,
+                ConnectionRefusedError,
+                requests.exceptions.SSLError,
                 socket.timeout):
             pass
+        except Exception as e:
+            logging.exception(e)
         return r
     
     def Req(self, url, method, data=None, headers=None):
@@ -66,6 +104,12 @@ class Requests():
         except (requests.exceptions.ConnectTimeout,
                 requests.exceptions.ReadTimeout,
                 requests.exceptions.Timeout,
+                requests.exceptions.SSLError,
+                ssl.SSLError,
+                requests.exceptions.ConnectionError,
+                ConnectionRefusedError,
                 socket.timeout):
             pass
+        except Exception as e:
+            logging.exception(e)
         return r

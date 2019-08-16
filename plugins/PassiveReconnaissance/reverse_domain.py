@@ -6,15 +6,14 @@ import requests
 import json
 import tldextract
 import re
-import sys
+from lib.cli_output import console
 from lib.random_header import get_ua
 from lib.iscdn import iscdn
-from lib.bcolors import bcolors
 
 
 def reverse_domain(host):
     # 查询旁站
-    sys.stdout.write(bcolors.RED + "Reverse IP Domain Check：\n" + bcolors.ENDC)
+    # sys.stdout.write(bcolors.RED + "\nReverse IP Domain Check：\n" + bcolors.ENDC)
     if iscdn(host):
         result = []
         data = {"remoteAddress": "{0}".format(host), "key": ""}
@@ -46,10 +45,12 @@ def reverse_domain(host):
                 pass
         if len(result) < 20:
             if result:
-                sys.stdout.write(bcolors.OKGREEN + "\n".join("[+] " + str(i) for i in result) + "\n" + bcolors.ENDC)
+                for i in result:
+                    console('reverse_domain', host, i + '\n')
             else:
-                sys.stdout.write(bcolors.OKGREEN + '[+] None' + "\n" + bcolors.ENDC)
+                console('reverse_domain', host, 'None\n')
             return result
         else:
-            sys.stdout.write(bcolors.OKGREEN + 'The maximum number of domain names exceeded (20)' + bcolors.ENDC)
+            console('reverse_domain', host, 'The maximum number of domain names exceeded (20)\n')
+            # sys.stdout.write(bcolors.OKGREEN + 'The maximum number of domain names exceeded (20)\n' + bcolors.ENDC)
             return ['The maximum number of domain names exceeded (20)']

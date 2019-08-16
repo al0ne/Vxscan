@@ -7,15 +7,17 @@ import importlib
 import time
 import os
 import concurrent.futures
-import sys
-from lib.bcolors import bcolors
-from lib.url import parse_host
-from plugins.ActiveReconnaissance.crawl import crawl
+import logging
+from lib.cli_output import console
 from lib.sqldb import Sqldb
+from lib.url import parse_host
+from plugins.BruteForce.crack import Crack
+
 
 class Vuln():
-    def __init__(self, host, ports, apps):
+    def __init__(self, url, host, ports, apps):
         host = parse_host(host)
+        self.url = url
         self.ip = host
         self.apps = apps
         self.ports = ports
@@ -23,19 +25,15 @@ class Vuln():
     
     def vuln(self, script):
         check_func = getattr(script, 'check')
-        result = check_func(self.ip, self.ports, self.apps)
+        result = check_func(self.url, self.ip, self.ports, self.apps)
         if result:
             if type(result) == str:
                 self.out.append(result)
             else:
                 self.out.extend(result)
     
-    def save(self, result):
-        Sqldb('result').get_vuln(self.ip, result)
-        
     def run(self):
         scripts = []
-        sys.stdout.write(bcolors.RED + "Vuln：\n" + bcolors.ENDC)
         try:
             for _ in glob.glob('script/*.py'):
                 script_name = os.path.basename(_).replace('.py', '')
@@ -44,18 +42,19 @@ class Vuln():
             with concurrent.futures.ThreadPoolExecutor(
                 max_workers=20) as executor:
                 executor.map(self.vuln, scripts)
+            self.out = list(filter(None, self.out))
+            for i in self.out:
+                console('Vuln', self.ip, i + '\n')
+            brute_result = Crack().pool(self.ip, self.ports)
+            if brute_result:
+                self.out.extend(brute_result)
+            Sqldb('result').get_vuln(self.ip, self.out)
         except Exception as e:
-            print(e)
-        crawl_info = crawl(self.ip).pool()
-        
-        self.out.extend(crawl_info)
-        self.out = list(filter(None, self.out))
-        sys.stdout.write(bcolors.OKGREEN + "\n".join("[+] " + str(i) for i in self.out) + "\n" + bcolors.ENDC)
-        self.save(self.out)
+            logging.exception(e)
 
 
 if __name__ == "__main__":
     start_time = time.time()
-    print(Vuln('127.0.0.1', ['http:80'], ["iis", "Apache", "jQuery"]).run())
+    Vuln('http://127.0.0.1', '127.0.0.1', ['http:80', 'https:8000'], ["iis", "Apache", "jQuery"]).run()
     end_time = time.time()
     print('\nrunning {0:.3f} seconds...'.format(end_time - start_time))

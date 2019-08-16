@@ -3,6 +3,7 @@
 
 import random
 import socket
+import string
 import struct
 from fake_useragent import UserAgent
 
@@ -10,24 +11,24 @@ HEADERS = {
     'Accept':
         'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
     'User-Agent': "",
-    'Referer': 'https://www.google.com',
+    'Referer': "",
     'X-Forwarded-For': "",
     'X-Real-IP': "",
+    'Accept-Encoding': "",
     'Connection': 'keep-alive',
 }
 
 
 def get_ua():
     ua = UserAgent()
+    key = random.random() * 20
+    referer = ''.join([random.choice(string.ascii_letters + string.digits) for x in range(int(key))])
+    referer = 'www.' + referer.lower() + '.com'
     ip = socket.inet_ntoa(struct.pack('>I', random.randint(1, 0xffffffff)))
     HEADERS["User-Agent"] = ua.random
+    HEADERS["Referer"] = referer
     HEADERS["X-Forwarded-For"] = HEADERS["X-Real-IP"] = ip
-    pyHEADERS = [
-        'User-Agent: {}'.format(ua.random),
-        'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Referer: https://www.google.com', 'X-Forwarded-For: {}'.format(ip),
-        'X-Real-IP: {}'.format(ip), 'Connection: close'
-    ]
+    
     return HEADERS
 
 

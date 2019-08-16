@@ -1,4 +1,7 @@
 import re
+import logging
+from lib.iscdn import iscdn
+from lib.url import parse_host
 from lib.Requests import Requests
 from lib.waf import WAF_RULE
 
@@ -30,6 +33,15 @@ def checkwaf(url):
             for i in payload:
                 r = req.get(url + i)
                 result = verify(r.headers, r.text[:10000])
-        return result
-    except:
-        return 'NoWAF'
+                if result != 'NoWAF':
+                    return result
+    except UnboundLocalError:
+        pass
+    except Exception as e:
+        logging.exception(e)
+    host = parse_host(url)
+    
+    if not iscdn(host):
+        return 'CDN IP'
+    
+    return 'NoWAF'

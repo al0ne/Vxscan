@@ -3,6 +3,7 @@
 
 import re
 import json
+import logging
 from bs4 import BeautifulSoup
 
 
@@ -50,19 +51,30 @@ class WebPage(object):
     def check(self):
         out = []
         apps = []
-        with open('data/apps.txt', 'r') as f:
-            for i in f.readlines():
-                apps.append(i.strip('\n'))
-        
-        for i in apps:
-            name, method, position, regex = i.strip().split("|", 3)
-            if method == 'headers':
-                if self.headers.get(position) != None:
-                    if re.search(regex, str(self.headers.get(position))) != None:
+        try:
+            with open('data/apps.txt', 'r', encoding='utf-8') as f:
+                for i in f.readlines():
+                    apps.append(i.strip('\n'))
+            
+            for i in apps:
+                name, method, position, regex = i.strip().split("|", 3)
+                if method == 'headers':
+                    if self.headers.get(position) != None:
+                        if re.search(regex, str(self.headers.get(position))) != None:
+                            out.append(name)
+                elif method == 'index':
+                    if re.search(regex, self.html):
                         out.append(name)
-            else:
-                if re.search(regex, self.html):
-                    out.append(name)
+                elif method == 'match':
+                    for k, v in self.headers.items():
+                        if regex in v or regex in k:
+                            out.append(name)
+                else:
+                    if regex in self.html:
+                        out.append(name)
+        except Exception as e:
+            print(e, i)
+            logging.exception(e)
         return out
     
     def info(self):
@@ -72,32 +84,18 @@ class WebPage(object):
             server = self.headers['Server']
         except:
             server = 'None'
-        security = []
-        if self.headers.get('Content-Security-Policy'):
-            security.append('Content-Security-Policy')
-        if self.headers.get('X-Webkit-CSP'):
-            security.append('X-Webkit-CSP')
-        if self.headers.get('X-XSS-Protection'):
-            security.append('X-XSS-Protection')
-        if self.headers.get('Strict-Transport-Security'):
-            security.append('Strict-Transport-Security')
-        if self.headers.get('x-hacker'):
-            security.append('x-hacker')
-        if self.headers.get('x-content-type-options'):
-            security.append('x-content-type-options')
-        if self.headers.get('x-frame-options'):
-            security.append('x-frame-options')
-        if self.headers.get('Access-Control-Allow-Origin'):
-            security.append('Access-Control-Allow-Origin')
-        if self.headers.get('Referrer-Policy'):
-            security.append('Referrer-Policy')
-        if self.headers.get('HSTS'):
-            security.append('HSTS')
+        
+        result = list(filter(None, result))
+        
+        programs = ['PHP', 'JSP', 'ASP', 'Node.js', 'ASPX', 'Ruby', 'Python', 'Go']
+        middles = ['Nginx', 'Apache', 'Apache Tomcat', 'IIS', 'Jetty', 'JBoss', 'Weblogic', 'WebSphere', 'IIS8.0',
+                   'IIS6.0',
+                   'IIS7.0', 'lighttpd', 'mod_fastcgi', 'Caddy']
+        
         return {
             "apps": list(set(result)),
             "title": self.title,
             "server": server,
-            'security': security
         }
 
 

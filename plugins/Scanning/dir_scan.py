@@ -3,15 +3,23 @@
 import re
 import random
 import base64
+import glob
 import itertools
 import concurrent.futures
-import difflib
 import logging
+import ssl
+import chardet
+import socket
+import requests
+from lib.cli_output import console
 from urllib import parse
+from bs4 import BeautifulSoup
+from lib.verify import verify_ext
 from lib.sqldb import Sqldb
 from lib.settings import *
 from lib.cli_output import *
 from lib.Requests import Requests
+from plugins.ActiveReconnaissance.robots import robots
 
 
 class Cartesian(object):
@@ -31,126 +39,88 @@ class Cartesian(object):
 
 
 class DirScan():
-    def __init__(self, dbname):
+    def __init__(self, dbname, apps):
         self.notstr = ''
+        self.apps = apps
         self.notlen = ''
         self.goto = ''
         self.title = ''
         self.dbname = dbname
-        self.ext = 'asp,php'
         self.outjson = []
         
         self.req = Requests()
     
     def get_urls(self, domain):
+        wordlist = []
+        robot = robots(domain)
         domain = domain.replace('http://', '').replace('https://', '').rstrip('/')
-        ext = self.ext.split(',')
+        ext = verify_ext(self.apps)
         ext = list(map(lambda x: '.' + x, ext))
-        path = [
-            "/robots.txt", "/README.md", "/crossdomain.xml", "/.git/config",
-            "/.hg"
-            "/.git/index", "/.svn/entries", "/.svn/wc.db", "/.DS_Store",
-            "/CVS/Root", "/CVS/Entries", "/.idea/workspace.xml",
-            "/nginx_status", "/.mysql_history", "/login/", "/phpMyAdmin",
-            "/pma/", "/pmd/", "/SiteServer", "/admin/", "/Admin/", "/manage",
-            "/manager/", "/manage/html", "/resin-admin", "/resin-doc",
-            "/axis2-admin", "/admin-console", "/system", "/wp-admin",
-            "/uc_server", "/debug", "/Conf", "/webmail", "/service",
-            "/memadmin", "/owa", "/harbor", "/master", "/root", "/xmlrpc.php",
-            "/phpinfo.php", "/zabbix", "/api", "/backup", "/inc",
-            "/web.config", "/httpd.conf", "/local.conf", "/sitemap.xml",
-            "/app.config", "/.bash_history", "/.rediscli_history", "/.bashrc",
-            "/.history", "/nohup.out", "/.mysql_history", "/server-status",
-            "/solr/", "/examples/",
-            "/examples/servlets/servlet/SessionExample", "/manager/html",
-            "/login.do", "/config/database.yml", "/database.yml", "/db.conf",
-            "/db.ini", "/jmx-console/HtmlAdaptor", "/cacti/",
-            "/jenkins/script", "/memadmin/index.php", "/pma/index.php",
-            "/phpMyAdmin/index.php", "/.git/HEAD", "/.gitignore",
-            "/.ssh/known_hosts", "/.ssh/id_rsa", "/id_rsa",
-            "/.ssh/authorized_keys", "/app.cfg", "/.mysql.php.swp",
-            "/.db.php.swp", "/.database.php.swp", "/.settings.php.swp",
-            "/.config.php.swp", "/config/.config.php.swp",
-            "/.config.inc.php.swp", "/config.inc.php.bak", "/php.ini",
-            "/sftp-config.json", "/WEB-INF/web.xml",
-            "/WEB-INF/web.xml.bak", "/WEB-INF/config.xml",
-            "/WEB-INF/struts-config.xml", "/server.xml",
-            "/config/database.yml", "/WEB-INF/database.properties",
-            "/WEB-INF/log4j.properties", "/WEB-INF/config/dbconfig",
-            "/fckeditor/_samples/default.html", "/ckeditor/samples/",
-            "/ueditor/ueditor.config.js",
-            "/javax.faces.resource...%2fWEB-INF/web.xml.jsf", "/wp-config.php",
-            "/configuration.php", "/sites/default/settings.php", "/config.php",
-            "/config.inc.php", "/data/config.php", "/data/config.inc.php",
-            "/data/common.inc.php", "/include/config.inc.php",
-            "/WEB-INF/classes/", "/WEB-INF/lib/", "/WEB-INF/src/", "/.bzr",
-            "/SearchPublicRegistries.jsp", "/.bash_logout",
-            "/resin-doc/resource/tutorial/jndi-appconfig/test?inputFile=/etc/profile",
-            "/test2.html", "/conf.ini", "/index.tar.tz", "/index.cgi.bak",
-            "/WEB-INF/classes/struts.xml", "/package.rar",
-            "/WEB-INF/applicationContext.xml", "/mysql.php", "/apc.php",
-            "/zabbix/", "/script", "/editor/ckeditor/samples/", "/upfile.php",
-            "/conf.tar.gz",
-            "/WEB-INF/classes/conf/spring/applicationContext-datasource.xml",
-            "/output.tar.gz", "/.vimrc", "/INSTALL.TXT", "/pool.sh",
-            "/database.sql.gz", "/o.tar.gz", "/upload.sh",
-            "/WEB-INF/classes/dataBase.properties", "/b.php", "/setup.sh",
-            "/db.php.bak", "/WEB-INF/classes/conf/jdbc.properties",
-            "/WEB-INF/spring.xml", "/.htaccess",
-            "/resin-doc/viewfile/?contextpath=/&servletpath=&file=index.jsp",
-            "/.htpasswd", "/id_dsa", "/WEB-INF/conf/activemq.xml",
-            "/config/config.php", "/.idea/modules.xml",
-            "/WEB-INF/spring-cfg/applicationContext.xml", "/test2.txt",
-            "/WEB-INF/classes/applicationContext.xml",
-            "/WEB-INF/conf/database_config.properties",
-            "/WEB-INF/classes/rabbitmq.xml",
-            "/ckeditor/samples/sample_posteddata.php", "/proxy.pac",
-            "/sql.php", "/test2.php", "/build.tar.gz",
-            "/WEB-INF/classes/config/applicationContext.xml",
-            "/WEB-INF/dwr.xml", "/readme", "/phpmyadmin/index.php",
-            "/WEB-INF/web.properties", "/readme.html", "/key"
-        ]
+        path = []
+        for txt in glob.glob(r'data/path/*.txt'):
+            with open(txt, 'r', encoding='utf-8') as f:
+                for i in f.readlines():
+                    path.append(i.strip())
         leaks = Cartesian()
         leaks.add_data([
             '/www', '/1', '/2016', '/2017', '/2018', '/2019', '/wwwroot',
             '/backup', '/index', '/web', '/test', '/tmp', '/default', '/temp',
-            '/extra', '/file', '/qq', '/up', '/config', '/' + domain
+            '/website', '/upload', '/bin', '/bbs', '/www1', '/www2', '/log',
+            '/extra', '/file', '/qq', '/up', '/config', '/' + domain,
+            '/userlist', '/dev', '/a', '/123', '/sysadmin', '/localhost',
+            '/111', '/access', '/old', '/i', '/vip', '/index.php', '/global', '/key', '/webroot', '/out', '/server',
         ])
         leaks.add_data([
             '.tar.gz', '.zip', '.rar', '.sql', '.7z', '.bak', '.tar', '.txt',
-            '.log', '.tmp', '.gz', '.bak~', '.sh'
-        ])
+            '.tgz', '.swp', '~', '.old', '.tar.bz2', '.data', '.csv'])
         path.extend(leaks.build())
         index = Cartesian()
         index.add_data([
             '/1', '/l', '/info', '/index', '/admin', '/login', '/qq', '/q',
-            '/shell', '/p', '/a', '/userinfo', '/api', '/common', '/web',
+            '/search', '/install', '/default', '/cmd', '/upload', '/test',
             '/manage', '/loading', '/left', '/zzzz', '/welcome', '/ma', '/66'
         ])
         index.add_data(ext)
         path.extend(index.build())
-        return set(path)
+        path.extend(wordlist)
+        if robot:
+            path.extend(robot)
+        return list(set(path))
     
-    def diff(self, text):
-        result = difflib.SequenceMatcher(None, self.notstr, text).quick_ratio()
-        return result
-    
-    def _verify(self, r, goto, title):
+    def _verify(self, url, code, contype, length, goto, text, title):
+        # 验证404页面
         result = True
-        if r.status_code in BLOCK_CODE:
+        if code in BLOCK_CODE:
             result = False
-        if r.headers['Content-Type'] in BLOCK_CONTYPE:
+        if contype in BLOCK_CONTYPE:
             result = False
-        if len(r.text) == self.notlen:
+        if length == self.notlen:
             result = False
         if goto == self.goto:
             result = False
+        if url in goto:
+            result = False
+        if url.strip('/') == self.goto or url.strip('/') == goto:
+            result = False
         for i in PAGE_404:
-            if i in r.text:
+            if i in text:
                 result = False
                 break
         if title == self.title and title != 'None':
             result = False
+        if re.search(r'forbidden|error', goto):
+            result = False
+        if re.search(r'\.bak$|\.zip$|\.rar$|\.7z$|\.old$|\.htaccess$|\.csv$|\.txt$|\.sql$|\.tar$|\.tar.gz$',
+                     url) and contype == 'html':
+            result = False
+        return result
+    
+    def parse_html(self, text):
+        result = []
+        soup = BeautifulSoup(text, 'html.parser')
+        for i in soup.find_all(['a', 'img', 'script']):
+            if i.attrs:
+                result.append(i.attrs)
         return result
     
     def check404(self, url):
@@ -160,53 +130,115 @@ class DirScan():
         url = url + '/' + random_url.decode(
             'utf-8') + '.html'
         try:
+            self.notstr = '404page'
             r = self.req.get(url)
-            self.notstr = r.text[:10000]
-            self.notlen = len(r.text)
+            if r.status_code == '200':
+                coding = chardet.detect(r.content[:10000]).get('encoding')
+                if coding:
+                    text = r.content[:20000].decode(coding)
+                    self.notstr = self.parse_html(text)
+            self.notlen = r.headers.get('Content-Length')
+            if not self.notlen:
+                self.notlen = len(r.content)
             if r.is_redirect:
                 self.goto = r.headers['Location']
+        except (requests.exceptions.ConnectTimeout,
+                requests.exceptions.ReadTimeout,
+                requests.exceptions.Timeout,
+                requests.exceptions.SSLError,
+                ssl.SSLError,
+                AttributeError,
+                socket.timeout):
+            pass
+        
+        except UnboundLocalError:
+            pass
+        
         except Exception as e:
             logging.exception(e)
     
     def scan(self, host):
         try:
-            r = self.req.get(host)
+            r = self.req.scan(host)
             if r.is_redirect:
-                goto = r.headers['Location']
+                goto = r.headers.get('Location')
             else:
                 goto = 'test'
-            if r.headers['Content-Type']:
-                contype = re.sub('\w+/', '', str(r.headers['Content-Type']))
-                contype = re.sub(';.*', '', contype)
+            if r.headers.get('Content-Type'):
+                contype = re.sub(r'\w+/', '', str(r.headers.get('Content-Type')))
+                contype = re.sub(r';.*', '', contype)
             else:
                 contype = 'None'
-            text = r.text[:10000]
-            title = re.search('(?<=<title>).*(?=</title>)', text)
-            if self._verify(r, goto, title):
-                if contype == 'html':
-                    result = self.diff(text)
+            rsp_len = r.headers.get('Content-Length')
+            # 判断是不是网页或者文本，如果是其他文件coding将置为空
+            ishtml = False
+            if contype == 'html':
+                ishtml = True
+                content = r.raw.read()
+            else:
+                content = r.raw.read(25000)
+            
+            if ishtml:
+                coding = chardet.detect(content).get('encoding')
+                if coding:
+                    text = content.decode(coding)
+                    title = re.search('(?<=<title>).*(?=</title>)', text)
                 else:
-                    result = 0
-                if result < 0.8:
+                    text = 'Other'
+                    title = None
+            
+            else:
+                text = 'Other'
+                title = None
+            if not rsp_len:
+                rsp_len = len(content)
+            if self._verify(r.url, r.status_code, contype, rsp_len, goto, text, title):
+                result = 0
+                if ishtml:
+                    pagemd5 = self.parse_html(text)
+                    if pagemd5 == self.notstr:
+                        result = 1
+                if result < 0.5:
                     if title == None:
                         title = 'None'
                     else:
                         title = title.group()
                     title = re.sub(r'\n|\t', '', title)
                     urlresult = parse.urlparse(host)
-                    sys.stdout.write(bcolors.OKGREEN + '[+] {}{:^12}{:^14}\t{:^18}\t{:^8}\n'.format(
-                        r.status_code, len(r.text), title, contype, str(r.url)) + bcolors.ENDC)
+                    console('URLS', urlresult.netloc, urlresult.path + '\n')
                     data = {
                         urlresult.netloc: {
                             "rsp_code": r.status_code,
-                            "rsp_len": len(r.text),
+                            "rsp_len": rsp_len,
                             "title": title,
                             "contype": contype,
                             "url": urlresult.path
                         }
                     }
                     self.outjson.append(data)
+                    r.close()
+        
+        except (requests.exceptions.ConnectTimeout,
+                requests.exceptions.ReadTimeout,
+                requests.exceptions.Timeout,
+                requests.exceptions.SSLError,
+                ssl.SSLError,
+                socket.timeout):
+            pass
+        
+        except (UnboundLocalError, AttributeError):
+            pass
+        
+        except UnicodeDecodeError as e:
+            logging.exception(host)
+            logging.exception(e)
+        
         except Exception as e:
+            logging.exception(e)
+        
+        try:
+            r.close()
+        except:
             pass
         return 'OK'
     
@@ -214,13 +246,14 @@ class DirScan():
         Sqldb(self.dbname).get_urls(urls)
     
     def run(self, task):
-        print(bcolors.RED + 'URLS：' + bcolors.ENDC)
-        with concurrent.futures.ThreadPoolExecutor(
-            max_workers=THREADS) as executor:
-            futures = [executor.submit(self.scan, i) for i in task]
-            for future in concurrent.futures.as_completed(futures):
-                future.result()
-        self.save(self.outjson)
+        try:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=THREADS) as executor:
+                futures = [executor.submit(self.scan, i) for i in task]
+                for future in concurrent.futures.as_completed(futures, timeout=5):
+                    future.result()
+            self.save(self.outjson)
+        except concurrent.futures._base.TimeoutError:
+            pass
     
     # 创建启动任务
     def pool(self, host):
@@ -230,3 +263,10 @@ class DirScan():
         for url in urls:
             task.append(host + url)
         self.run(task)
+
+
+if __name__ == "__main__":
+    start_time = time.time()
+    DirScan('result', ['php']).pool('http://127.0.0.1')
+    end_time = time.time()
+    print('\nrunning {0:.3f} seconds...'.format(end_time - start_time))

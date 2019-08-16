@@ -47,6 +47,7 @@ class JsLeaks():
         for _ in regex:
             text = re.findall(_, r.text, re.M | re.I)
             if text != None:
+                text = list(map(lambda x: url + ' Leaks: ' + x, text))
                 self.result.extend(text)
 
 

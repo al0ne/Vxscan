@@ -16,6 +16,7 @@ def parse_host(url):
 
 
 def parse_ip(host):
+    host = parse_host(host)
     # 根据domain得到ip 例如www.xxx.com 得到 x.x.x.x
     host = socket.gethostbyname(host)
     return host
@@ -49,7 +50,7 @@ def diff(urls):
     return result
 
 
-def dedup_url(urls):
+def dedup_link(urls):
     host = []
     _ = []
     furls = []

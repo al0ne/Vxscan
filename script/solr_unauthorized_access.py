@@ -13,19 +13,18 @@ Usage
 
 """
 from lib.verify import verify
-from lib.random_header import get_ua
-import requests
+from lib.Requests import Requests
 
 vuln = ['solr']
 
 
-def check(ip, ports, apps):
+def check(url, ip, ports, apps):
+    req = Requests()
     if verify(vuln, ports, apps):
         try:
-            url = 'http://' + ip
             url = url + '/solr/'
-            g = requests.get(url, headers=get_ua(), timeout=5, verify=False)
-            if g.status_code is 200 and 'Solr Admin' in g.content and 'Dashboard' in g.content:
+            r = req.get(url)
+            if r.status_code is 200 and 'Solr Admin' in r.content and 'Dashboard' in r.content:
                 return 'Apache Solr Admin leask'
         except Exception:
             pass

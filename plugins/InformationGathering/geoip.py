@@ -3,15 +3,15 @@
 # https://github.com/al0ne
 
 import geoip2.database
-import sys
-from lib.bcolors import bcolors
-
+import geoip2.errors
+import logging
+from lib.cli_output import console
 
 def geoip(ipaddr):
     # 获取IP地理位置
-    geoip2.database
-    reader = geoip2.database.Reader('data/GeoLite2-City.mmdb')
     try:
+        geoip2.database
+        reader = geoip2.database.Reader('data/GeoLite2-City.mmdb')
         response = reader.city(ipaddr)
         country = response.country.names["zh-CN"]
         site = response.subdivisions.most_specific.names.get("zh-CN")
@@ -21,9 +21,17 @@ def geoip(ipaddr):
         if not city:
             city = ''
         address = '{} {} {}'.format(country, site, city)
+    except FileNotFoundError:
+        address = 'Geoip File Not Found'
+    except geoip2.errors.AddressNotFoundError:
+        address = 'Address Not In Databases'
     except Exception as e:
+        logging.exception(e)
         address = 'None'
-    sys.stdout.write(bcolors.RED + "GeoIP：\n" + bcolors.ENDC)
-    sys.stdout.write(bcolors.OKGREEN + '[+] Address: {}\n'.format(address) + bcolors.ENDC)
-    sys.stdout.write(bcolors.OKGREEN + '[+] Ipaddr: {}\n'.format(ipaddr) + bcolors.ENDC)
+    console('GeoIP', ipaddr, 'Address: {}\n'.format(address))
+    console('GeoIP', ipaddr, 'Ipaddr: {}\n'.format(ipaddr))
     return address
+
+
+if __name__ == "__main__":
+    geoip('1.1.1.1')

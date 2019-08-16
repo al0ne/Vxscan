@@ -34,12 +34,10 @@ Requirements
 --------
 
 Python version > 3.6    
-requests    
+requests  
 pyfiglet  
 fake-useragent  
 beautifulsoup4  
-pycrypto  
-paramiko  
 geoip2  
 tldextract  
 pymysql  
@@ -51,9 +49,19 @@ lxml
 pymongo  
 psycopg2  
 virustotal_python  
+dnspython  
+paramiko  
+cryptography==2.4.2  
+
 apt install libpq-dev nmap  
-wget https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz -o db/GeoLite2-City.mmdb  
-pip3 install -r requirements.txt  
+
+wget https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz  
+After decompressing, put GeoLite2-City.mmdb inside to vxscan/data/GeoLite2-City.mmdb  
+
+wget https://geolite.maxmind.com/download/geoip/database/GeoLite2-ASN.tar.gz  
+After decompressing, put the GeoLite2-ASN.mmdb inside to vxscan/data/GeoLite2-ASN.mmdb  
+
+pip3 install -r requirements.txt 
 
 Features
 --------
@@ -123,7 +131,7 @@ Structure
 ```
 /
 ├─Vxscan.py  主文件
-├─db
+├─data
 │  ├─apps.json  Web指纹信息
 │  ├─apps.txt  Web指纹信息(WEBEYE)
 │  ├─GeoLite2-ASN.mmdb      geoip
@@ -281,6 +289,18 @@ def check(ip, ports, apps):
             result.append(out)
     return result
 ```
+
+Fingerprint
+--------
+如何添加指纹识别特征  
+修改data/apps.txt文件内容    
+**1. 匹配HTTP Header头**  
+Cacti|headers|Set-Cookie|Cacti=  
+**2. 匹配HTTP响应体**  
+ASP|index|index|<a[^>]*?href=('|")[^http][^>]*?\.asp(\?|\#|\1)  
+**3. 拆分Headers头，在k或者v中匹配**  
+ThinkSNS|match|match|T3_lang  
+
 Waf/CDN list
 --------
 360  
@@ -374,8 +394,8 @@ yunsuo
 Output
 --------
 ![image](https://github.com/al0ne/Vxscan/raw/master/doc/logo.jpg)
+![image](https://github.com/al0ne/Vxscan/raw/master/doc/logo1.jpg)
 ![image](https://github.com/al0ne/Vxscan/raw/master/doc/logo2.jpg)
-![image](https://github.com/al0ne/Vxscan/raw/master/doc/logo3.jpg)
 
 Note
 ------

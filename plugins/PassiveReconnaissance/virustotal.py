@@ -1,10 +1,9 @@
 # coding=utf-8
 import re
-import sys
-from lib.bcolors import bcolors
 from lib.iscdn import iscdn
 from virustotal_python import Virustotal
 from lib.settings import VIRUSTOTAL_API
+from lib.cli_output import console
 from plugins.PassiveReconnaissance.ip_history import ipinfo
 
 
@@ -12,7 +11,7 @@ def virustotal(host):
     # VT接口，主要用来查询PDNS，绕过CDN
     pdns = []
     history_ip = []
-    sys.stdout.write(bcolors.RED + "PDNS：\n" + bcolors.ENDC)
+    # sys.stdout.write(bcolors.RED + "\nPDNS：\n" + bcolors.ENDC)
     if VIRUSTOTAL_API:
         try:
             vtotal = Virustotal(VIRUSTOTAL_API)
@@ -30,7 +29,8 @@ def virustotal(host):
             pass
     pdns.extend(ipinfo(host))
     if pdns:
-        sys.stdout.write(bcolors.OKGREEN + "\n".join("[+] " + str(i) for i in pdns[:10]) + "\n" + bcolors.ENDC)
+        for i in pdns[:10]:
+            console('PDNS', host, i + '\n')
     else:
-        sys.stdout.write(bcolors.OKGREEN + '[+] None \n' + bcolors.ENDC)
+        console('PDNS', host, 'None\n')
     return pdns

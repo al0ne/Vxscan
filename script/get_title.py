@@ -2,31 +2,34 @@
 # https://github.com/al0ne
 
 from lib.verify import get_list
-from lib.random_header import get_ua
 from lxml import etree
-import requests
+from lib.Requests import Requests
 import chardet
+import re
+
+req = Requests()
 
 
 def get_title(url):
     try:
-        r = requests.get(url, headers=get_ua(), timeout=3, verify=False)
+        r = req.get(url)
         if r.status_code == 200:
             coding = chardet.detect(r.content).get('encoding')
-            r.encoding = coding
-            html = etree.HTML(r.text)
+            text = r.content[:10000].decode(coding)
+            html = etree.HTML(text)
             title = html.xpath('//title/text()')
             return url + ' | ' + title[0]
     except:
         pass
 
 
-def check(ip, ports, apps):
+def check(url, ip, ports, apps):
     result = []
     probe = get_list(ip, ports)
     for i in probe:
-        out = get_title(i)
-        if out:
-            result.append(out)
+        if re.search(r':\d+', i):
+            out = get_title(i)
+            if out:
+                result.append(out)
     if result:
         return result

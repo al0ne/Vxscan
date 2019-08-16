@@ -2,6 +2,7 @@
 import argparse
 import ipaddress
 import time
+import logging
 from lib.common import start
 from lib.cli_output import start_out
 from plugins.ActiveReconnaissance.active import ActiveCheck
@@ -10,13 +11,18 @@ from report import gener
 
 def read_file(file):
     hosts = []
-    with open(file, 'rt') as f:
-        for ip in f.readlines():
-            hosts.append(ip.strip())
-    start_out(hosts)
-    hosts2 = ActiveCheck(hosts).pool()
-    for i in hosts2:
-        start(i)
+    try:
+        with open(file, 'rt') as f:
+            for ip in f.readlines():
+                hosts.append(ip.strip())
+        start_out(hosts)
+        hosts2 = ActiveCheck(hosts).pool()
+        for i in hosts2:
+            start(i)
+    except FileNotFoundError:
+        print('input file')
+    except Exception as e:
+        logging.exception(e)
 
 
 def inet(net):

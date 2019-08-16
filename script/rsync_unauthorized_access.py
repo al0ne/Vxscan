@@ -6,9 +6,10 @@ timeout = 2
 vuln = ['rsync', '873']
 
 
-def check(ip, ports, apps):
+def check(url, ip, ports, apps):
     if verify(vuln, ports, apps):
         try:
+            socket.setdefaulttimeout(1.5)
             payload = b"\x40\x52\x53\x59\x4e\x43\x44\x3a\x20\x33\x31\x2e\x30\x0a"
             socket.setdefaulttimeout(timeout)
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -16,7 +17,7 @@ def check(ip, ports, apps):
             sock.connect(server_address)
             sock.sendall(payload)
             initinfo = sock.recv(400)
-            if "RSYNCD" in initinfo:
+            if b"RSYNCD" in initinfo:
                 sock.sendall(b"\x0a")
             modulelist = sock.recv(200)
             sock.close()

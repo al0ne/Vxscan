@@ -34,24 +34,32 @@ Requirements
 
 Python version > 3.6    
 requests  
-tqdm  
 pyfiglet  
 fake-useragent  
-beautifulsoup4      
+beautifulsoup4  
 geoip2  
-tldextract      
+tldextract  
+pymysql  
+pymssql  
 python-nmap  
 geoip2  
 tldextract  
 lxml  
 pymongo  
-virustotal_python   
-dnspython   
+psycopg2  
+virustotal_python  
+dnspython  
+paramiko  
+cryptography==2.4.2  
+
 apt install libpq-dev nmap  
+
 wget https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz  
-After decompressing, put GeoLite2-City.mmdb inside to vxscan/db/GeoLite2-City.mmdb  
+After decompressing, put GeoLite2-City.mmdb inside to vxscan/data/GeoLite2-City.mmdb  
+
 wget https://geolite.maxmind.com/download/geoip/database/GeoLite2-ASN.tar.gz  
-After decompressing, put the GeoLite2-ASN.mmdb inside to vxscan/db/GeoLite2-ASN.mmdb  
+After decompressing, put the GeoLite2-ASN.mmdb inside to vxscan/data/GeoLite2-ASN.mmdb  
+
 pip3 install -r requirements.txt  
 
 Features
@@ -93,6 +101,10 @@ Features
     + Add multiple HTTP ports from one host to the POC target
     + Call POC based on fingerprint and port service
     + Unauthorized, deserialized, RCE, Sqli...
+ - BruteForce
+    + Mysql
+    + Postgresql
+    + SSH
  - Report
     + Results are stored in the Sqlite3 database
     + Inbound deduplication, detected that existing items will not be scanned
@@ -115,14 +127,14 @@ optional arguments:
 ```python3 vxscan.py -u http://www.xxx.com/ ```  
 **2. Scan a website from a file list**  
 ```python3 vxscan.py -f hosts.txt```  
-**3. cidr eg. 1.1.1.1 or 1.1.1.0/24**  
+**3. cidr eg. 127.0.0.0/24**  
 ```python3 vxscan.py -i 127.0.0.0/24```  
 
 Structure
 --------
 ```
 ├─Vxscan.py master file
-├─db
+├─data
 │ ├─apps.json           Web fingerprint information
 │ ├─apps.txt            Web fingerprint information (WEBEYE)
 │ ├─GeoLite2-ASN.mmdb       geoip
@@ -166,8 +178,6 @@ Structure
 │ ├─Scanning
 │   ├─dir_scan              directory scan
 │   ├─port_scan             port scan
-│ ├─Vulnerability
-│   ├─lfi_sqli              Sql injection, LFI detection
 ├─requirements.txt
 ├─report.py html            report generation
 ├─logo.jpg
@@ -209,8 +219,7 @@ CHECK_DB = False
 # invalid 404 page
 PAGE_404 = [
     'page_404"', "404.png", '找不到页面', '页面找不到', "Not Found", "访问的页面不存在",
-    "page does't exist", 'notice_404', '404 not found', '<title>错误</title>', '内容正在加载', '提示：发生错误', '<title>网站防火墙',
-    '无法加载控制器'
+    "page does't exist", 'notice_404', '404 not found'
 ]
 
 # ping
@@ -281,6 +290,17 @@ def check(ip, ports, apps):
             result.append(out)
     return result
 ```
+
+Fingerprint
+--------
+How to add fingerprint recognition features   
+Modify the contents of the data/apps.txt file    
+**1. Match HTTP Header header**  
+Cacti|headers|Set-Cookie|Cacti=  
+**2. Match HTTP response body**  
+ASP|index|index|<a[^>]*?href=('|")[^http][^>]*?\.asp(\?|\#|\1)  
+**3. Split Headers heads to match in k or v**  
+ThinkSNS|match|match|T3_lang 
 
 Waf/CDN list
 --------
@@ -376,8 +396,8 @@ Output
 --------
 The following is the AWVS scanner test website results    
 ![image](https://github.com/al0ne/Vxscan/raw/master/doc/logo.jpg)
+![image](https://github.com/al0ne/Vxscan/raw/master/doc/logo1.jpg)
 ![image](https://github.com/al0ne/Vxscan/raw/master/doc/logo2.jpg)
-![image](https://github.com/al0ne/Vxscan/raw/master/doc/logo3.jpg)
 
 Note
 ------

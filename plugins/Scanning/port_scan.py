@@ -8,13 +8,14 @@ import concurrent.futures
 import sys
 import os
 import time
+import logging
 from urllib import parse
-from lib.bcolors import bcolors
+from lib.cli_output import console
 from lib.sqldb import Sqldb
 
 sys.path.append(os.getcwd())
 
-THREADNUM = 100  # 线程数
+THREADNUM = 150  # 线程数
 
 SIGNS = (
     # 协议 | 版本 | 关键字
@@ -152,12 +153,15 @@ SIGNS = (
     b'WebSocket|WebSocket|Server: WebSocket',
     b'HTTPS|HTTPS|Instead use the HTTPS scheme to access'
     b'HTTPS|HTTPS|HTTP request was sent to HTTPS',
+    b'HTTPS|HTTPS|HTTP request to an HTTPS server',
     b'HTTPS|HTTPS|Location: https',
     b'SVN|SVN|^\( success \( 2 2 \( \) \( edit-pipeline svndiff1',
     b'Dubbo|Dubbo|^Unsupported command',
     b'HTTP|Elasticsearch|cluster_name.*elasticsearch',
     b'RabbitMQ|RabbitMQ|^AMQP\x00\x00\t\x01',
-    b'HTTP|HTTP|HTTP/1.1'
+    b'HTTP|HTTP|HTTP/1.1',
+    b'HTTP|HTTP|HTTP/1.0',
+    b'Zookeeper|Zookeeper|^Zookeeper version: '
 
 )
 
@@ -190,7 +194,7 @@ def get_server(port):
         'JavaRMI': '1099',
         'Lotus': '1352',
         'MSSQL': '1433',
-        'MSSQL Monitor': '1434',
+        'MSSQL': '1434',
         'Oracle': '1521',
         'PPTP': '1723',
         'cPanel': '2082',
@@ -214,7 +218,6 @@ def get_server(port):
         'Kloxo': '7778',
         'Zabbix': '8069',
         'RouterOS': '8291',
-        'WebSphere': '9090',
         'Elasticsearch': '9200',
         'Elasticsearch': '9300',
         'Zabbix': '10050',
@@ -226,40 +229,39 @@ def get_server(port):
     }
     for k, v in SERVER.items():
         if v == port:
-            return '{}:{}'.format(k, port)
-    return 'Unknown:{}'.format(port)
+            return k
+    return 'Unknown'
 
 
-PORTS = [21, 22, 23, 25, 26, 37, 47, 49, 53, 69, 70, 79, 80, 81, 82, 83, 84, 88, 89, 110, 111, 119, 123, 129, 135,
-         137, 139, 143, 161, 175, 179, 195, 311, 389, 443, 444, 445, 465, 500, 502, 503, 512, 513, 514, 515, 520,
-         523, 530, 548, 554, 563, 587, 593, 623, 626, 631, 636, 660, 666, 749, 751, 771, 789, 873, 901, 902, 990,
-         992, 993, 995, 1000, 1010, 1023, 1024, 1025, 1080, 1088, 1099, 1111, 1177, 1200, 1234, 1311, 1325, 1352,
-         1400, 1433, 1434, 1471, 1515, 1521, 1599, 1604, 1723, 1741, 1777, 1883, 1900, 1911, 1920, 1962, 1991,
-         2000, 2049, 2067, 2081, 2082, 2083, 2086, 2087, 2121, 2123, 2152, 2181, 2222, 2323, 2332, 2333, 2375,
-         2376, 2379, 2404, 2433, 2455, 2480, 2601, 2604, 2628, 3000, 3001, 3128, 3260, 3269, 3283, 3299, 3306,
-         3307, 3310, 3311, 3312, 3333, 3386, 3388, 3389, 3460, 3478, 3493, 3541, 3542, 3560, 3661, 3689, 3690,
-         3702,
-         3749, 3794, 3780, 3784, 3790, 4000, 4022, 4040, 4063, 4064, 4070, 4200, 4343, 4369, 4400, 4440, 4443,
-         4444,
-         4500, 4550, 4567, 4664, 4730, 4782, 4786, 4800, 4840, 4848, 4899, 4911, 4949, 5000, 5001, 5006, 5007,
-         5008,
-         5009, 5060, 5094, 5222, 5269, 5353, 5357, 5431, 5432, 5433, 5555, 5560, 5577, 5601, 5631, 5632, 5666,
-         5672,
-         5683, 5800, 5801, 5858, 5900, 5901, 5938, 5984, 5985, 5986, 6000, 6001, 6014, 6082, 6379, 6390, 6664,
-         6666, 6667, 6881, 6969, 7000, 7001, 7002, 7071, 7080, 7218, 7474, 7547, 7548, 7549, 7657, 7777, 7779,
-         7903,
-         7905, 8000, 8001, 8008, 8009, 8010, 8060, 8069, 8080, 8081, 8082, 8083, 8086, 8087, 8088, 8089, 8090,
-         8098,
-         8099, 8112, 8126, 8139, 8140, 8161, 8181, 8191, 8200, 8291, 8307, 8333, 8334, 8443, 8554, 8649, 8688,
-         8800, 8834, 8880, 8883, 8888, 8889, 8899, 9000, 9001, 9002, 9009, 9014, 9042, 9043, 9050, 9051, 9080,
-         9081, 9090, 9092, 9100, 9151, 9160, 9191, 9200, 9300, 9306, 9418, 9443, 9595, 9600, 9869, 9903, 9943,
-         9944, 9981, 9990, 9998, 9999, 10000, 10001, 10050, 10051, 10243, 10554, 11211, 11300, 12345, 13579, 14147,
-         16010, 16992, 16993, 17000, 17778, 18081, 18245, 18505, 20000, 20547, 21025, 21379, 21546, 22022, 22222,
-         23023, 23389, 23424, 25105, 25565, 27015, 27016, 27017, 27018, 27019, 28015, 28017, 28561, 30000, 30718,
-         32400,
-         32764, 32768, 32769, 32770, 32771, 33389, 33890, 33899, 37777, 38190, 40001, 40049, 40650, 41706, 42178,
-         43382, 44818, 47808, 48899, 49152, 49153, 50000, 50010, 50011, 50015, 50030, 50050, 50060, 50070, 50100,
-         51106, 53413, 54138, 55443, 55553, 55554, 62078, 64738, 65535]
+PORTS = [21, 22, 23, 25, 26, 37, 47, 49, 53, 69, 70, 79, 80, 81, 82, 83, 84, 88, 89, 110, 111, 119, 123, 129, 135, 137,
+         139, 143, 146, 161, 163, 175, 179, 195, 199, 222, 258, 259, 264, 280, 301, 306, 311, 340, 366, 389, 425, 427,
+         443, 444, 445, 458, 465, 481, 497, 500, 502, 503, 512, 513, 514, 515, 520, 523, 524, 530, 541, 548, 554, 555,
+         726, 749, 751, 765, 771, 777, 783, 787, 789, 808, 843, 873, 880, 888, 898, 901, 902, 981, 987, 990, 992, 993,
+         995, 996, 999, 1000, 1007, 1010, 1021, 1023, 1024, 1025, 1080, 1088, 1099, 1102, 1111, 1117, 1119, 1126, 1141,
+         1325, 1328, 1334, 1352, 1400, 1417, 1433, 1434, 1443, 1455, 1461, 1471, 1494, 1503, 1515, 1521, 1524, 1533,
+         2179, 2181, 2196, 2200, 2222, 2251, 2260, 2288, 2301, 2323, 2332, 2333, 2366, 2375, 2376, 2379, 2399, 2401,
+         2404, 2433, 2455, 2480, 2492, 2500, 2522, 2525, 2557, 2601, 2604, 2628, 2638, 2710, 2725, 2800, 2809, 2811,
+         2869, 2875, 2920, 2998, 3000, 3001, 3003, 3011, 3013, 3017, 3052, 3071, 3077, 3128, 3168, 3211, 3221, 3260,
+         3269, 3283, 3299, 3306, 3307, 3310, 3311, 3312, 3333, 3351, 3367, 3386, 3388, 3389, 3404, 3460, 3476, 3478,
+         3493, 3517, 3527, 3541, 3542, 3546, 3551, 3560, 3580, 3659, 3661, 3689, 3690, 3702, 3703, 3737, 3749, 3766,
+         3780, 3784, 3790, 3794, 3809, 3814, 3851, 3869, 3871, 3878, 3880, 3889, 3905, 3914, 3918, 3920, 3945, 3971,
+         3986, 3995, 3998, 4000, 4022, 4040, 4045, 4063, 4064, 4070, 4111, 4129, 4200, 4224, 4242, 4279, 4321, 4343,
+         5432,
+         5550, 5555, 5560, 5566, 5577, 5601, 5631, 5632, 5633, 5666, 5672, 5683, 5718, 5730, 5800, 5801, 5815, 5822,
+         5825, 5850, 5858, 5859, 5862, 5877, 5900, 5901, 5915, 5922, 5925, 5938, 5950, 5952, 5984, 5985, 5986, 6000,
+         7001,
+         7002, 7004, 7007, 7019, 7025, 7070, 7071, 7080, 7100, 7103, 7106, 7218, 7402, 7435, 7443, 7474, 7496, 7512,
+         7547, 7548, 7549, 7625, 7627, 7657, 7676, 7741, 7777, 7779, 7800, 7903, 7905, 7911, 8000, 8001, 8008, 8009,
+         8010, 8031, 8042, 8045, 8060, 8069, 8080, 8081, 8082, 8083, 8086, 8087, 8088, 8089, 8090, 8091, 8093, 8098,
+         8099, 8112, 8126, 8139, 8140, 8161, 8181, 8191, 8200, 8222, 8254, 8291, 8300, 8307, 8333, 8334, 8383, 8390,
+         8400, 8402, 8433, 8443, 8500, 8554, 8600, 8649, 8654, 8688, 8701, 8800, 8834, 8873, 8880, 8883, 8888, 8889,
+         8899,
+         9151, 9160, 9191, 9200, 9207, 9220, 9290, 9300, 9306, 9415, 9418, 9443, 9485, 9500, 9535, 9575, 9595, 9600,
+         9618, 9666, 9869, 9898, 9900, 9903, 9917, 9929, 9943, 9944, 9968, 9981, 9990, 9998, 9999, 10000, 10001, 10012,
+         10050, 10051, 10082, 10180, 10215, 10243, 10554, 10566, 10621, 10626, 10778, 11211, 11300, 11967, 12000, 12124,
+         12174, 12265, 12345, 12888, 13456, 13579, 13722, 14000, 14003, 14147, 14238, 15000, 15660, 15742, 16010, 16012,
+         21571, 22022, 22222, 22939, 23023, 23307, 23389, 23424, 23502, 24212, 24444, 24800, 25105, 25565, 26214, 27000,
+         27015, 27016, 27017, 27018, 27019, 27545, 27715, 28015, 28017, 28201, 28561, 30000, 30718, 30951, 31038, 31337]
 
 PROBE = {
     'GET / HTTP/1.0\r\n\r\n'
@@ -273,9 +275,34 @@ class ScanPort():
         self.out = []
         self.num = 0
     
+    def regex(self, response, port):
+        match = False
+        
+        for pattern in SIGNS:
+            pattern = pattern.split(b'|')
+            if re.search(pattern[-1], response, re.IGNORECASE):
+                text = response.decode('utf-8', 'ignore')
+                text = re.sub('<', '\u003c', text)
+                text = re.sub('>', '\u003e', text)
+                match = True
+                proto = {
+                    "server": pattern[1].decode(),
+                    "port": port,
+                    "banner": text
+                }
+                self.out.append(proto)
+                break
+        if not match:
+            proto = {
+                "server": get_server(port),
+                "port": port,
+                "banner": response.decode('utf-8', 'ignore')
+            }
+            self.out.append(proto)
+    
     def socket_scan(self, hosts):
         global PROBE
-        socket.setdefaulttimeout(1)
+        socket.setdefaulttimeout(1.5)
         ip, port = hosts.split(':')
         try:
             if len(self.port) < 25:
@@ -290,19 +317,21 @@ class ScanPort():
                         if response:
                             break
                     if response:
-                        for pattern in SIGNS:
-                            pattern = pattern.split(b'|')
-                            if re.search(pattern[-1], response, re.IGNORECASE):
-                                proto = '{}:{}'.format(pattern[1].decode(), port)
-                                self.out.append(proto)
-                                break
+                        self.regex(response, port)
+                    else:
+                        proto = {
+                            "server": get_server(port),
+                            "port": port,
+                            "banner": ''
+                        }
+                        self.out.append(proto)
             else:
                 self.num = 1
         
         except (socket.timeout, ConnectionResetError):
             pass
-        except:
-            pass
+        except Exception as e:
+            logging.exception(e)
     
     def save(self, ipaddr, result):
         Sqldb('result').get_ports(ipaddr, result)
@@ -313,16 +342,16 @@ class ScanPort():
         for i in PORTS:
             hosts.append('{}:{}'.format(ip, i))
         try:
-            with concurrent.futures.ThreadPoolExecutor(
-                max_workers=THREADNUM) as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=THREADNUM) as executor:
                 result = {executor.submit(self.socket_scan, i): i for i in hosts}
                 for future in concurrent.futures.as_completed(result):
                     future.result()
+                    if self.num == 1:
+                        break
         except EOFError:
             pass
     
     def pool(self):
-        sys.stdout.write(bcolors.RED + "PortScan：\n" + bcolors.ENDC)
         out = []
         try:
             # 判断给出的url是www.baiud.com还是www.baidu.com/path这种形式
@@ -330,31 +359,26 @@ class ScanPort():
                 self.ipaddr = self.ipaddr.replace('http://', '').replace('https://', '').rstrip('/')
             else:
                 self.ipaddr = self.ipaddr.replace('http://', '').replace('https://', '').rstrip('/')
-                self.ipaddr = re.sub('/\w+', '', self.ipaddr)
-            if re.search('\d+\.\d+\.\d+\.\d+', self.ipaddr):
+                self.ipaddr = re.sub(r'/\w+', '', self.ipaddr)
+            if re.search(r'\d+\.\d+\.\d+\.\d+', self.ipaddr):
                 ipaddr = self.ipaddr
             else:
                 ipaddr = socket.gethostbyname(self.ipaddr)
             if ':' in ipaddr:
-                ipaddr = re.sub(':\d+', '', ipaddr)
+                ipaddr = re.sub(r':\d+', '', ipaddr)
             self.run(ipaddr)
         except Exception as e:
             pass
-        for i in self.out:
-            _, port = i.split(':')
-            out.append(port)
-        for i in self.port:
-            if i not in out:
-                self.out.append(get_server(i))
+        
         if self.num == 0:
-            ports = list(set(self.out))
-            self.save(self.ipaddr, ports)
-            for _ in ports:
-                sys.stdout.write(bcolors.OKGREEN + '[+] {}\n'.format(_) + bcolors.ENDC)
-            return list(set(self.out))
+            self.save(self.ipaddr, self.out)
+            for _ in self.out:
+                out.append('{}:{}'.format(_.get('server'), _.get('port')))
+                console('PortScan', self.ipaddr, '{}:{}\n'.format(_.get('server'), _.get('port')))
+            return out
         else:
-            self.save(self.ipaddr, ['Portspoof:0'])
-            sys.stdout.write(bcolors.OKGREEN + '[+] Portspoof:0\n' + bcolors.ENDC)
+            self.save(self.ipaddr, [{"server": 'Portspoof', "port": '0', "banner": ''}])
+            console('PortScan', self.ipaddr, 'Portspoof:0\n')
             return ['Portspoof:0']
 
 
