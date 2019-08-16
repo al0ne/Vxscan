@@ -1,0 +1,12 @@
+/robots.txt
+/test2.txt
+/debug.txt
+/changelog.txt
+/readMe.txt
+/auth.txt
+/用户说明.txt
+/安装手册.txt
+/ftp.txt
+/ver.txt
+/install.txt
+/output.txt
