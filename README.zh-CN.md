@@ -50,8 +50,9 @@ pymongo
 psycopg2  
 virustotal_python  
 dnspython  
-paramiko  
+paramiko==2.4.2  
 cryptography==2.4.2  
+pysocks  
 
 apt install libpq-dev nmap  
 
@@ -69,6 +70,7 @@ Features
     + GeoIP
     + DNS 解析验证
     + Ping 存活验证
+    + HTTPS/HTTP 验证
     - WAF/CDN 探测
         + WAF Rules
         + CDN IP段
@@ -77,8 +79,9 @@ Features
     + HTTP Server
     + HTTP Headers
     - 指纹识别
-        + Wappalyzer
-        + WEBEYE
+        + Wappalyzer (1100+)
+        + WEBEYE (100+)
+        + FOFA (2000+)
     - PDNS
         + virustotal
         + viewdns.info
@@ -88,9 +91,12 @@ Features
     + 操作系统版本探测 (nmap)
  - Ports
     + 400+ Ports
+    + 140+ 端口指纹特征
+    + 记录Banner信息
     + 跳过CDN IP
     + 全端口开放的主机(portspoof)自动跳过
  - URLS
+    + 解析robots.txt将内容加入扫描列表中
     + 常见备份、后门、目录、中间件、敏感文件地址
     + 使用笛卡尔乘积方式生成字典列表
     + 随机的UserAgent、XFF、X-Real-IP、Referer
@@ -98,10 +104,19 @@ Features
     + 识别自定义302跳转
     + 过滤无效Content-Type，无效状态吗
     + 保存url、title、contype、rsp_len、rsp_code
+    + 大文件识别，扫描url时将添加stream=True方式，这样不会遇到大文件就全部加载。
  - Vuln
     + 将一个主机多个HTTP端口加入POC目标
     + 根据指纹、端口服务来调用POC
     + 未授权、反序列化、RCE、Sqli...
+ - BruteForce
+    + Mysql
+    + Postgresql
+    + SSH
+ - Crawl
+    + 通过爬虫提取动态参数，去参去重
+    + Js 文件信息泄露 (phone,apikey,email,ip,domain,todo)
+    + HTML 注释泄露 (phone,email,domain,ip,todo)
  - Report
     + 结果存入Sqlite3数据库
     + 入库去重，检测到已有项目将不在扫描
@@ -162,7 +177,7 @@ Structure
 │  ├─ActiveReconnaissance
 │    ├─active.py         判断主机存活并且验证dns解析
 │    ├─check_waf.py      判断网站waf
-│    ├─crawk.py         抓取网站连接并测试
+│    ├─crawl.py         抓取网站连接并测试
 │    ├─osdetect.py      操作系统识别
 │  ├─InformationGathering
 │    ├─geoip.py         地理位置查询
@@ -175,8 +190,7 @@ Structure
 │  ├─Scanning
 │    ├─dir_scan     目录扫描
 │    ├─port_scan    端口扫描
-│  ├─Vulnerability
-│    ├─lfi_sqli     Sql注入、LFI检测
+
 ├─requirements.txt
 ├─report.py         html 报告生成
 ├─logo.jpg

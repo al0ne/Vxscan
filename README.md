@@ -40,7 +40,6 @@ beautifulsoup4
 geoip2  
 tldextract  
 pymysql  
-pymssql  
 python-nmap  
 geoip2  
 tldextract  
@@ -49,8 +48,9 @@ pymongo
 psycopg2  
 virustotal_python  
 dnspython  
-paramiko  
+paramiko==2.4.2  
 cryptography==2.4.2  
+pysocks  
 
 apt install libpq-dev nmap  
 
@@ -68,6 +68,7 @@ Features
     + GeoIP
     + DNS resolution verification
     + Ping survival verification
+    + HTTPS/HTTP authentication
     - WAF/CDN detection
         + WAF Rules
         + CDN IP segment
@@ -76,8 +77,9 @@ Features
     + HTTP Server
     + HTTP Headers
     - Fingerprint recognition
-        + Wappalyzer
-        + WEBEYE
+        + Wappalyzer (1100+)
+        + WEBEYE (100+)
+        + FOFA (2000+)
     - PDNS
         + virustotal
         + viewdns.info
@@ -87,9 +89,13 @@ Features
     + Operating system version detection (nmap)
  - Ports
     + 400+ Ports
+    + 140+ port fingerprint feature
+    + Port Banner
     + Skip CDN IP
     + Full port open host (portspoof) automatically skips
+    + Large file recognition, stream=True will be added when scanning the url, so that it will not be loaded when large files are encountered.
  - URLS
+    + Parse robots.txt to add content to the scan list
     + Common backup, backdoor, directory, middleware, sensitive file address
     + Generate a dictionary list using Cartesian product
     + Random UserAgent, XFF, X-Real-IP, Referer
@@ -105,6 +111,10 @@ Features
     + Mysql
     + Postgresql
     + SSH
+  - Crawl
+    + Extract dynamic parameters by crawling, de-weighting
+    + Js File information disclosure (phone,apikey,email,ip,domain,todo)
+    + HTML Comment leak (phone,email,domain,ip,todo)
  - Report
     + Results are stored in the Sqlite3 database
     + Inbound deduplication, detected that existing items will not be scanned
