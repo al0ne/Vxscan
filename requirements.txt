@@ -5,7 +5,6 @@ beautifulsoup4
 geoip2
 tldextract
 pymysql
-pymssql
 python-nmap
 geoip2
 tldextract
