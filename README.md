@@ -11,6 +11,11 @@ English | [简体中文](./README.zh-CN.md)
 Python3 comprehensive scanning tool, mainly used for sensitive file detection (directory scanning and js leak interface), WAF/CDN identification, port scanning, fingerprint/service identification, operating system identification, weak password detection, POC scanning, SQL injection, winding Pass CDN, check the next station
 
 # Update
+2019.8.19  
+Added the prohibition to scan gov.cn and edu.cn domain names, the program detects that it will terminate immediately  
+Modified the program output interface to change to time + plugin + domain name + result style  
+Removed the original SQL injection plugin and added a weak password detection plugin (Mysql, Postgresql, SSH, etc.)  
+Combine Fofa's fingerprint identification library with WEBEYE. Fingerprint rule 2000+  
 2019.7.19  
 Added socks5 global proxy  
 Packaged requests  
