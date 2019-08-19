@@ -5,6 +5,7 @@
 import concurrent.futures
 import subprocess
 import re
+import sys
 import platform
 import dns.resolver
 import logging
@@ -52,14 +53,23 @@ class ActiveCheck():
             logging.exception(e)
             return False
     
+    def disable(self):
+        # 求生欲名单
+        # 禁止扫描所有gov.cn与edu.cn结尾的域名，遵守法律！！！
+        for i in self.out:
+            if re.search(r'gov\.cn|edu\.cn$', i):
+                console('Disable', i, "Do not scan this domain\n")
+                sys.exit(1)
+    
     def pool(self):
         with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
             executor.map(self.check, self.hosts)
         if CHECK_DB:
             self.check_db(list(set(self.out)))
+        self.disable()
         return self.out
 
 
 if __name__ == "__main__":
-    result = ActiveCheck(['www.baidu.com']).pool()
+    result = ActiveCheck(['www.github.com']).pool()
     print(result)
