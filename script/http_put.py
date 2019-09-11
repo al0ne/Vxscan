@@ -16,6 +16,7 @@ def put(url):
 
 
 def check(url, ip, ports, apps):
+    result = ''
     try:
         probe = get_list(ip, ports)
         for url in probe:
