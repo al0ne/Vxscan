@@ -7,6 +7,8 @@ import subprocess
 import re
 import sys
 import platform
+import time
+import nmap
 import dns.resolver
 import logging
 from urllib import parse
@@ -19,10 +21,10 @@ class ActiveCheck():
     def __init__(self, hosts):
         self.hosts = hosts
         self.out = []
-    
+
     def check_db(self, hosts):
         self.out = Sqldb('result').query_db(hosts)
-    
+
     def check(self, url):
         loc = parse.urlparse(url)
         if getattr(loc, 'netloc'):
@@ -31,45 +33,74 @@ class ActiveCheck():
             host = loc.path
         try:
             if not re.search(r'\d+\.\d+\.\d+\.\d+', host):
-                dns.resolver.query(host, 'A')
+                # 验证DNS存活并且DNS不能是一些特殊IP（DNSIP、内网IP）
+                resolver = dns.resolver.Resolver()
+                resolver.nameservers = ['223.5.5.5', '1.1.1.1', '8.8.8.8']
+                a = resolver.query(host, 'A')
+                for i in a.response.answer:
+                    for j in i.items:
+                        if hasattr(j, 'address'):
+                            if re.search(r'1\.1\.1\.1|8\.8\.8\.8|127\.0\.0\.1|114\.114\.114\.114', j.address):
+                                return False
             if PING:
                 try:
+                    # Windows调用ping判断存活 Linux调用nmap来判断主机存活
+                    # nmap判断存活会先进行ping然后连接80端口，这样不会漏掉
                     if platform.system() == 'Windows':
                         subprocess.check_output(['ping', '-n', '2', '-w', '1', host])
                     else:
-                        subprocess.check_output(['ping', '-c 2', '-W 1', host])
+                        nm = nmap.PortScanner()
+                        result = nm.scan(hosts=host, arguments='-sP -n')
+                        for k, v in result.get('scan').items():
+                            if not v.get('status').get('state') == 'up':
+                                console('PING', host, "is not alive\n")
+                                return False
                     self.out.append(url)
                 except subprocess.CalledProcessError:
                     console('PING', host, "is not alive\n")
                     return False
                 except Exception as e:
                     logging.exception(e)
-            
+
             else:
                 self.out.append(url)
-        except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN):
+        except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN, dns.resolver.NoNameservers):
             console('DnsCheck', host, "No A record\n")
+        except dns.exception.Timeout:
+            console('DnsCheck', host, "Timeout\n")
         except Exception as e:
             logging.exception(e)
             return False
-    
+
     def disable(self):
-        # 求生欲名单
-        # 禁止扫描所有gov.cn与edu.cn结尾的域名，遵守法律！！！
+        # 禁止扫描所有敏感域名，遵守法律！！！
         for i in self.out:
-            if re.search(r'gov\.cn|edu\.cn$', i):
-                console('Disable', i, "Do not scan this domain\n")
+            if re.search(r'\.org\.cn|\.com\.cn|\.cn|gov\.cn|edu\.cn|\.mil|\.aero|\.int|\.go\.\w+$|\.ac\.\w+$', i):
+                console('Disable', i, "Do not scan this domain\n\n")
                 sys.exit(1)
-    
+
     def pool(self):
-        with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
-            executor.map(self.check, self.hosts)
+        try:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
+                result = {executor.submit(self.check, i): i for i in self.hosts}
+                for future in concurrent.futures.as_completed(result, timeout=3):
+                    future.result()
+        except (EOFError, concurrent.futures._base.TimeoutError):
+            pass
+        except Exception as e:
+            logging.exception(e)
+
         if CHECK_DB:
             self.check_db(list(set(self.out)))
+
         self.disable()
+
         return self.out
 
 
 if __name__ == "__main__":
-    result = ActiveCheck(['www.github.com']).pool()
+    start_time = time.time()
+    result = ActiveCheck(['baidu.com']).pool()
+    end_time = time.time()
     print(result)
+    print('\nrunning {0:.3f} seconds...'.format(end_time - start_time))

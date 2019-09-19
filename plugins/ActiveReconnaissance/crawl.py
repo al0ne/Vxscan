@@ -5,27 +5,27 @@ from lib.cli_output import console
 from lxml import etree
 from lib.Requests import Requests
 from urllib import parse
-from lib.url import dedup_link
 from lib.sqldb import Sqldb
 from plugins.InformationGathering.js_leaks import JsLeaks
 
 
 class crawl():
     def __init__(self, host):
-        self.links = []
         self.urls = []
         self.js = []
         self.domain = ''
         self.host = host
         self.result = []
         self.req = Requests()
-    
+
     def jsparse(self, r):
         try:
             html = etree.HTML(r.text)
             result = html.xpath('//script/@src')
             for i in result:
-                if not re.search(r'jquery|bootstrap|adsbygoogle|javascript|#|vue|react|51.la/=', i):
+                if not re.search(
+                        r'jquery|bootstrap|adsbygoogle|angular|javascript|#|vue|react|51.la/=|map\.baidu\.com|canvas|cnzz\.com|slick\.js|autofill-event\.js|tld\.js|clipboard|Chart\.js',
+                        i):
                     if '://' not in i:
                         i = re.sub(r'^/|^\.\./', '', i)
                         i = self.host + '/' + i
@@ -34,7 +34,7 @@ class crawl():
             pass
         except Exception as e:
             logging.exception(e)
-    
+
     def dedup_url(self, urls):
         urls = list(set(urls))
         result = []
@@ -50,28 +50,38 @@ class crawl():
             else:
                 okurl.append(i)
         return okurl
-    
+
     def extr(self, url, body):
+        # html页面内提取邮箱
         email = re.findall(r'\b[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(?:\.[a-zA-Z0-9_-]+)+', body)
         if email:
             self.result.extend(list(map(lambda x: 'URL: ' + url + '  Email: ' + x, email)))
+        # html页面内提取手机号
         phone = re.findall(
             r'\b(?:139|138|137|136|135|134|147|150|151|152|157|158|159|178|182|183|184|187|188|198|130|131|132|155|156|166|185|186|145|175|176|133|153|177|173|180|181|189|199|170|171)[0-9]{8}\b',
             body)
         if phone:
             self.result.extend(list(map(lambda x: 'URL: ' + url + '  Phone: ' + x, phone)))
+        # html注释内提取ip地址
         ipaddr = re.findall(
             r'(?<=<!--).*((?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)).*(?=-->)',
             body)
         if ipaddr:
             self.result.extend(list(map(lambda x: 'IP: ' + x, ipaddr)))
-        links = re.findall(r'(?<=<!--).*((?:http|https):[\w\./\?=&]+)".*(?=-->)', body)
+        # html注释内提取https连接
+        links = re.findall(r'(?<=<!--).{0,120}((?:http|https):[\w\./\?\-=&]+).{0,120}(?=-->)', body)
         if links:
-            self.result.extend(list(map(lambda x: 'Links: ' + x, links)))
-        links2 = re.findall(r'(?<=<!--).*a\shref="([\w\.\?=\&/]+)".*(?=-->)', body)
+            self.result.extend(list(map(lambda x: 'URL: ' + url + '  Links: ' + x, links)))
+        # html注释内提取a连接
+        links2 = re.findall(r'(?<=<!--).{0,120}a\shref="([\-\w\.\?:=\&/]+)".{0,120}(?=-->)', body)
         if links2:
-            self.result.extend(list(map(lambda x: 'Links: ' + x, links2)))
-    
+            self.result.extend(list(map(lambda x: 'URL: ' + url + '  Links: ' + x, links2)))
+        links3 = re.findall(
+            r'(?<=<!--).{0,120}\b(?:usr|pwd|uname|uid|file|upload|manager|webadmin|backup|account|admin|password|pass|user|login|secret|private|crash|root|xxx|fix|todo|secret_key|token|auth_token|access_token|username|authkey|user_id|userid|apikey|api_key|sid|eid|passwd|session_key|SESSION_TOKEN|api_token|access_token_secret|private_key|DB_USERNAME|oauth_token|api_secret_key|备注|笔记|备份|后台|登陆|管理|上传|下载|挂马|挂链)\b.{0,120}(?=-->)',
+            body)
+        if links3:
+            self.result.extend(list(map(lambda x: 'URL: ' + url + '  Links: ' + x, links3)))
+
     def parse_html(self, host):
         try:
             r = self.req.get(host)
@@ -91,29 +101,37 @@ class crawl():
                         else:
                             link = 'http://' + host + '/' + link
                     if domain in link:
-                        # 带参数的直接加入列表，不带参数的需要二次访问
-                        if re.search('=', link) or re.search(r'/\?\w+=\w+', link):
-                            self.links.append(link)
-                        else:
+                        if '=' not in link:
                             self.urls.append(link)
-        except (UnboundLocalError, AttributeError):
+        except (UnboundLocalError, AttributeError, ValueError):
             pass
         except Exception as e:
             logging.exception(e)
         self.urls = self.dedup_url(self.urls)
         return list(set(self.urls))
-    
+
     def pool(self):
         result = self.parse_html(self.host)
-        with concurrent.futures.ThreadPoolExecutor(
-            max_workers=30) as executor:
-            executor.map(self.parse_html, result)
+        try:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=30) as executor:
+                futures = [executor.submit(self.parse_html, i) for i in result]
+                for future in concurrent.futures.as_completed(futures, timeout=3):
+                    future.result()
+        except (EOFError, concurrent.futures._base.TimeoutError):
+            pass
+        except Exception as e:
+            logging.exception(e)
+
         jslink = JsLeaks().pool(self.js)
+
         self.result.extend(jslink)
-        self.links = dedup_link(self.links)
-        self.links = list(map(lambda x: 'Dynamic: ' + x, self.links))
-        self.result.extend(self.links)
         self.result = list(set(self.result))
+
         for i in self.result:
             console('Crawl', self.host, i + '\n')
+
         Sqldb('result').get_crawl(self.domain, self.result)
+
+
+if __name__ == "__main__":
+    crawl('https://127.0.0.1').pool()

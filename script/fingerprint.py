@@ -1,3 +1,4 @@
+# coding=utf-8
 # author: al0ne
 # https://github.com/al0ne
 
@@ -13,10 +14,10 @@ req = Requests()
 def get_title(url):
     try:
         r = req.get(url)
-        if r.status_code == 200:
-            coding = chardet.detect(r.content).get('encoding')
-            text = r.content[:10000].decode(coding)
-            webinfo = WebPage(r.url, text, r.headers).info()
+        coding = chardet.detect(r.content).get('encoding')
+        text = r.content[:10000].decode(coding)
+        webinfo = WebPage(r.url, text, r.headers).info()
+        if webinfo.get('apps'):
             return 'URL: ' + url + ' | Fingerprint: ' + ' , '.join(webinfo.get('apps'))
     except:
         pass
@@ -24,7 +25,7 @@ def get_title(url):
 
 def check(url, ip, ports, apps):
     result = []
-    probe = get_list(ip, ports)
+    probe = get_list(url, ports)
     for i in probe:
         if re.search(r':\d+', i):
             out = get_title(i)

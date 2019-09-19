@@ -1,10 +1,12 @@
 # coding=utf-8
+# author: al0ne
+# https://github.com/al0ne
 
 import re
 from lib.Requests import Requests
 from lib.verify import get_list
 
-path = ['/p.php', '/phpinfo.php', '/info.php', '/i.php', '/test.php', '/a.php', '/?phpinfo=1']
+path = ['/1.php', '/p.php', '/phpinfo.php', '/info.php', '/i.php', '/test.php', '/a.php', '/?phpinfo=1']
 
 
 def get_info(url):
@@ -21,7 +23,7 @@ def get_info(url):
 
 def check(url, ip, ports, apps):
     result = []
-    probe = get_list(ip, ports)
+    probe = get_list(url, ports)
     for i in probe:
         if re.search(r':\d+', i):
             out = get_info(i)
