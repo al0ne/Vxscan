@@ -3,16 +3,10 @@ pyfiglet
 fake-useragent
 beautifulsoup4
 geoip2
-tldextract
-pymysql
 python-nmap
-geoip2
 tldextract
 lxml
 pymongo
-psycopg2
 virustotal_python
 dnspython
-paramiko==2.4.2
-cryptography==2.4.2
 pysocks

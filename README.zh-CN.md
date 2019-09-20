@@ -12,6 +12,10 @@ python3写的综合扫描工具，主要用来敏感文件探测(目录扫描与
 
 # Update  
 
+2019.9.20  
+删除了暴力破解模块，实在是太慢了  
+修复了端口扫描和目录扫描的BUG  
+
 2019.8.19  
 添加了禁止扫描gov.cn与edu.cn域名，程序检测到会立即终止运行  
 修改了程序输出界面 改为时间+插件+域名+结果样式  
@@ -44,22 +48,13 @@ pyfiglet
 fake-useragent  
 beautifulsoup4  
 geoip2  
-tldextract  
-pymysql  
-pymssql  
 python-nmap  
-geoip2  
 tldextract  
 lxml  
 pymongo  
-psycopg2  
 virustotal_python  
 dnspython  
-paramiko==2.4.2  
-cryptography==2.4.2  
 pysocks  
-
-apt install libpq-dev nmap  
 
 wget https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz  
 After decompressing, put GeoLite2-City.mmdb inside to vxscan/data/GeoLite2-City.mmdb  
@@ -114,10 +109,6 @@ Features
     + 将一个主机多个HTTP端口加入POC目标
     + 根据指纹、端口服务来调用POC
     + 未授权、反序列化、RCE、Sqli...
- - BruteForce
-    + Mysql
-    + Postgresql
-    + SSH
  - Crawl
     + 通过爬虫提取动态参数，去参去重
     + Js 文件信息泄露 (phone,apikey,email,ip,domain,todo)
