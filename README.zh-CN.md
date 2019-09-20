@@ -42,19 +42,19 @@ Requirements
 --------
 
 Python version > 3.6    
-requests
-pyfiglet
-fake-useragent
-beautifulsoup4
-tldextract
-python-nmap
-geoip2
-lxml
-pymongo
-psycopg2
-virustotal_python
-dnspython
-pysocks 
+requests  
+pyfiglet  
+fake-useragent  
+beautifulsoup4  
+tldextract  
+python-nmap  
+geoip2  
+lxml  
+pymongo  
+psycopg2  
+virustotal_python  
+dnspython  
+pysocks   
 
 wget https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz  
 After decompressing, put GeoLite2-City.mmdb inside to vxscan/data/GeoLite2-City.mmdb  
