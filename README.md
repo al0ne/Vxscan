@@ -42,22 +42,15 @@ requests
 pyfiglet  
 fake-useragent  
 beautifulsoup4  
-geoip2  
 tldextract  
-pymysql  
 python-nmap  
 geoip2  
-tldextract  
 lxml  
 pymongo  
 psycopg2  
 virustotal_python  
 dnspython  
-paramiko==2.4.2  
-cryptography==2.4.2  
-pysocks  
-
-apt install libpq-dev nmap  
+pysocks    
 
 wget https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz  
 After decompressing, put GeoLite2-City.mmdb inside to vxscan/data/GeoLite2-City.mmdb  
