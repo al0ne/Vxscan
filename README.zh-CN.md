@@ -50,8 +50,7 @@ tldextract
 python-nmap  
 geoip2  
 lxml  
-pymongo  
-psycopg2  
+pymongo    
 virustotal_python  
 dnspython  
 pysocks   
