@@ -2,11 +2,9 @@ requests
 pyfiglet
 fake-useragent
 beautifulsoup4
-geoip2
 tldextract
 python-nmap
 geoip2
-tldextract
 lxml
 pymongo
 psycopg2
