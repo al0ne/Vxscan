@@ -108,10 +108,6 @@ Features
     + 将一个主机多个HTTP端口加入POC目标
     + 根据指纹、端口服务来调用POC
     + 未授权、反序列化、RCE、Sqli...
- - BruteForce
-    + Mysql
-    + Postgresql
-    + SSH
  - Crawl
     + 通过爬虫提取动态参数，去参去重
     + Js 文件信息泄露 (phone,apikey,email,ip,domain,todo)
