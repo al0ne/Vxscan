@@ -10,3 +10,4 @@ pymongo
 virustotal_python
 dnspython
 pysocks
+chardet
