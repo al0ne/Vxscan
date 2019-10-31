@@ -11,13 +11,6 @@ English | [简体中文](./README.zh-CN.md)
 Python3 comprehensive scanning tool, mainly used for sensitive file detection (directory scanning and js leak interface), WAF/CDN identification, port scanning, fingerprint/service identification, operating system identification, weak password detection, POC scanning, SQL injection, winding Pass CDN, check the next station
 
 # Update
-2019.10.31  
-Directory scanning uses uvloop+asyncio+aiohttp  
-Fixed a bunch of bugs  
-404 page validation adds more logic   
-2019.9.20  
-Removed the brute force module, it is too slow    
-Fixed bug in port scan and directory scan  
 2019.8.19  
 Added the prohibition to scan gov.cn and edu.cn domain names, the program detects that it will terminate immediately  
 Modified the program output interface to change to time + plugin + domain name + result style  
@@ -45,21 +38,18 @@ Requirements
 --------
 
 Python version > 3.6    
-requests
-pyfiglet
-fake-useragent
-beautifulsoup4
-pymysql
-python-nmap
-geoip2
-tldextract
-lxml
-pymongo
-virustotal_python
-dnspython
-pysocks  
-
-apt install  nmap  
+requests  
+pyfiglet  
+fake-useragent  
+beautifulsoup4  
+tldextract  
+python-nmap  
+geoip2  
+lxml  
+pymongo    
+virustotal_python  
+dnspython  
+pysocks    
 
 wget https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz  
 After decompressing, put GeoLite2-City.mmdb inside to vxscan/data/GeoLite2-City.mmdb  
@@ -136,8 +126,7 @@ python3 Vxscan.py -h
 optional arguments:
   -h, --help            show this help message and exit  
   -u URL, --url URL     Start scanning this url -u xxx.com  
-  -i INET, --inet INET  cidr eg. 1.1.1.1 or 1.1.1.0/24 
-  -s SAVE, --save SAVE  save in dbfile   
+  -i INET, --inet INET  cidr eg. 1.1.1.1 or 1.1.1.0/24  
   -f FILE, --file FILE  read the url from the file  
 ```  
 
@@ -153,7 +142,6 @@ Structure
 ```
 ├─Vxscan.py master file
 ├─data
-│ ├─path               urls
 │ ├─apps.json           Web fingerprint information
 │ ├─apps.txt            Web fingerprint information (WEBEYE)
 │ ├─GeoLite2-ASN.mmdb       geoip
@@ -161,20 +149,22 @@ Structure
 ├─doc                   to store some image or document resources
 ├─report                html report related content
 ├─lib
-│  ├─bcolor.py    Terminal color output  
-│  ├─cli_output.py   Terminal output
-│  ├─common.py    Determine CDN, port scan, POC scan, etc.
-│  ├─iscdn.py     According to the ip segment and the asn range to determine whether the IP is a CDN  
-│  ├─options.py     Option settings
-│  ├─random_header.py   Custom header header
-│  ├─Requests.py   Packaged requests library, do some custom settings  
-│  ├─settings.py      setting
-│  ├─sqldb.py      All related to sqlite3 are here
-│  ├─url.py     De-weight the captured connection
-│  ├─verify.py     Script script provides a verification interface
-│  ├─vuln.py      Batch call POC scan
-│  ├─waf.py     waf rules
-│  ├─webinfo.py  Web information acquisition   
+│ ├─common.py           Determine CDN, port scan, POC scan, etc.
+│ ├─color.py            terminal color output
+│ ├─cli_output.py       terminal output
+│ ├─active.py to            judge dns resolution and ping ip survival
+│ ├─save_html.py            Generate html reports
+│ ├─waf.py              waf rules
+│ ├─options.py          option settings
+│ ├─iscdn.py            Determine whether IP is CDN based on ip segment and asn range
+│ ├─osdetect.py         OS version identification
+│ ├─random_header.py        custom header header
+│ ├─settings.py         setting script
+│ ├─vuln.py             Batch call POC scan
+│ ├─url.py              Deduplicate the fetched connection
+│ ├─verify.py           script provides verification interface
+│ ├─sqldb.py            All related to sqlite3 are here
+│ ├─Requests.py         packaged requests library, do some custom settings
 ├─script
 │ ├─Poc.py Poc script
 │ ├─......
@@ -193,7 +183,6 @@ Structure
 │   ├─virustotal.py         VT Pdns query
 │   ├─wappalyzer.py         CMS passive fingerprint recognition
 │ ├─Scanning
-│   ├─async_scan        asyncio+aiohttp+uvloop
 │   ├─dir_scan              directory scan
 │   ├─port_scan             port scan
 ├─requirements.txt
@@ -267,7 +256,7 @@ from lib.verify import verify
 timeout = 2
 vuln = ['27017', 'Mongodb']
 
-def check(url, ip, ports, apps):
+def check(ip, ports, apps):
     # Verify is used to verify if there is a Mongodb related result in the scan list. If the port is not open, it will not be scanned.
     if verify(vuln, ports, apps):
         try:
@@ -299,7 +288,7 @@ def get_title(url):
         pass
 
 
-def check(url, ip, ports, apps):
+def check(ip, ports, apps):
     result = []
     probe = get_list(ip, ports)
     for i in probe:

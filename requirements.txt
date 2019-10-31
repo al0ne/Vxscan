@@ -2,12 +2,20 @@ requests
 pyfiglet
 fake-useragent
 beautifulsoup4
+<<<<<<< HEAD
 pymysql
+=======
+tldextract
+>>>>>>> origin/master
 python-nmap
 geoip2
-tldextract
 lxml
 pymongo
 virustotal_python
 dnspython
+<<<<<<< HEAD
 pysocks
+=======
+pysocks
+chardet
+>>>>>>> origin/master
