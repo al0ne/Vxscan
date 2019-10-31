@@ -15,3 +15,4 @@ aiohttp
 chardet
 uvloop
 urllib3
+pyOpenSSL
