@@ -28,7 +28,7 @@ def get_info(url):
         for i in path:
             r = req.get(url + i)
             if r.status_code == 200 and '<html' not in r.text:
-                if not re.search(r'{"\w+":|<head>|<form\s|<div\s|<input\s|<html|</a>', r.text):
+                if not re.search(r'{"\w+":|<head>|<form\s|<div\s|<input\s|<html|</a>|Active connections', r.text):
                     if verify(r.text):
                         return 'leaks : ' + url + i
     except:

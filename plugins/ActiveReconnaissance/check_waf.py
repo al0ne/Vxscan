@@ -5,6 +5,11 @@ from lib.url import parse_host
 from lib.Requests import Requests
 from lib.waf import WAF_RULE
 
+'''
+WAF 检测思路
+发送Payload触发WAF拦截机制，根据响应头字段或者响应体拦截内容判断WAF
+'''
+
 payload = (
     "/index.php?id=1 AND 1=1 UNION ALL SELECT 1,NULL,'<script>alert(XSS)</script>',table_name FROM information_schema.tables WHERE 2>1--/**/",
     "/../../../etc/passwd", "/.git/", "/phpinfo.php")
@@ -14,8 +19,8 @@ def verify(headers, content):
     for i in WAF_RULE:
         name, method, position, regex = i.split('|')
         if method == 'headers':
-            if headers.get(position) != None:
-                if re.search(regex, str(headers.get(position))) != None:
+            if headers.get(position) is not None:
+                if re.search(regex, str(headers.get(position))) is not None:
                     return name
         else:
             if re.search(regex, str(content)):
@@ -43,12 +48,12 @@ def checkwaf(url):
                     return result
         else:
             return result
-    except UnboundLocalError:
+    except (UnboundLocalError, AttributeError):
         pass
     except Exception as e:
         logging.exception(e)
 
 
 if __name__ == "__main__":
-    result = checkwaf('http://127.0.0.1')
-    print(result)
+    out = checkwaf('http://127.0.0.1','test')
+    print(out)

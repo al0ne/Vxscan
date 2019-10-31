@@ -1,8 +1,10 @@
 # coding=utf-8
+# author: al0ne
+# https://github.com/al0ne
 
 import re
-import random
 import base64
+import urllib3
 import glob
 import itertools
 import concurrent.futures
@@ -10,8 +12,9 @@ import logging
 import ssl
 import chardet
 import socket
+import OpenSSL
 import requests
-from lib.cli_output import console
+import random
 from urllib import parse
 from bs4 import BeautifulSoup
 from lib.verify import verify_ext
@@ -25,11 +28,11 @@ from plugins.ActiveReconnaissance.robots import robots
 class Cartesian(object):
     def __init__(self):
         self._data_list = []
-    
+
     # 添加生成笛卡尔积的数据列表
     def add_data(self, data=[]):
         self._data_list.append(data)
-    
+
     # 计算笛卡尔积
     def build(self):
         urls = []
@@ -39,21 +42,24 @@ class Cartesian(object):
 
 
 class DirScan():
-    def __init__(self, dbname, apps):
+    def __init__(self, dbname, apps, host):
         self.notstr = ''
         self.apps = apps
         self.notlen = ''
         self.goto = ''
+        self.host = host
         self.title = ''
         self.dbname = dbname
         self.outjson = []
-        
+
         self.req = Requests()
-    
+
     def get_urls(self, domain):
         wordlist = []
         robot = robots(domain)
         domain = domain.replace('http://', '').replace('https://', '').rstrip('/')
+        domain2 = re.sub(r'\.', '_', domain)
+        domain3 = domain.strip('www.')
         ext = verify_ext(self.apps)
         ext = list(map(lambda x: '.' + x, ext))
         path = []
@@ -63,22 +69,60 @@ class DirScan():
                     path.append(i.strip())
         leaks = Cartesian()
         leaks.add_data([
-            '/www', '/1', '/2016', '/2017', '/2018', '/2019', '/wwwroot',
-            '/backup', '/index', '/web', '/test', '/tmp', '/default', '/temp',
-            '/website', '/upload', '/bin', '/bbs', '/www1', '/www2', '/log',
-            '/extra', '/file', '/qq', '/up', '/config', '/' + domain,
-            '/userlist', '/dev', '/a', '/123', '/sysadmin', '/localhost',
-            '/111', '/access', '/old', '/i', '/vip', '/index.php', '/global', '/key', '/webroot', '/out', '/server',
+            '/www',
+            '/1',
+            '/2016',
+            '/2017',
+            '/2018',
+            '/2019',
+            '/wwwroot',
+            '/backup',
+            '/index',
+            '/web',
+            '/test',
+            '/tmp',
+            '/default',
+            '/temp',
+            '/website',
+            '/upload',
+            '/bin',
+            '/bbs',
+            '/www1',
+            '/www2',
+            '/log',
+            '/extra',
+            '/file',
+            '/qq',
+            '/up',
+            '/config',
+            '/' + domain,
+            '/userlist',
+            '/dev',
+            '/a',
+            '/123',
+            '/sysadmin',
+            '/localhost',
+            '/111',
+            '/access',
+            '/old',
+            '/i',
+            '/vip',
+            '/index.php',
+            '/global',
+            '/key',
+            '/webroot',
+            '/out',
+            '/server',
         ])
         leaks.add_data([
-            '.tar.gz', '.zip', '.rar', '.sql', '.7z', '.bak', '.tar', '.txt',
-            '.tgz', '.swp', '~', '.old', '.tar.bz2', '.data', '.csv'])
+            '.tar.gz', '.zip', '.rar', '.sql', '.7z', '.bak', '.tar', '.txt', '.tgz', '.swp', '~', '.old', '.tar.bz2',
+            '.data', '.csv'
+        ])
         path.extend(leaks.build())
         index = Cartesian()
         index.add_data([
-            '/1', '/l', '/info', '/index', '/admin', '/login', '/qq', '/q',
-            '/search', '/install', '/default', '/cmd', '/upload', '/test',
-            '/manage', '/loading', '/left', '/zzzz', '/welcome', '/ma', '/66'
+            '/1', '/l', '/info', '/index', '/admin', '/login', '/qq', '/q', '/search', '/install', '/default', '/cmd',
+            '/upload', '/test', '/manage', '/loading', '/left', '/zzzz', '/welcome', '/ma', '/66'
         ])
         index.add_data(ext)
         path.extend(index.build())
@@ -86,49 +130,57 @@ class DirScan():
         if robot:
             path.extend(robot)
         return list(set(path))
-    
+
     def _verify(self, url, code, contype, length, goto, text, title):
         # 验证404页面
-        result = True
-        if code in BLOCK_CODE:
-            result = False
-        if contype in BLOCK_CONTYPE:
-            result = False
-        if length == self.notlen:
-            result = False
-        if goto == self.goto:
-            result = False
-        if url in goto:
-            result = False
-        if url.strip('/') == self.goto or url.strip('/') == goto:
-            result = False
-        for i in PAGE_404:
-            if i in text:
+        try:
+            result = True
+            if code in BLOCK_CODE:
                 result = False
-                break
-        if title == self.title and title != 'None':
-            result = False
-        if re.search(r'forbidden|error', goto):
-            result = False
-        if re.search(r'\.bak$|\.zip$|\.rar$|\.7z$|\.old$|\.htaccess$|\.csv$|\.txt$|\.sql$|\.tar$|\.tar.gz$',
-                     url) and contype == 'html':
-            result = False
-        return result
-    
+            if contype in BLOCK_CONTYPE:
+                result = False
+            if length == self.notlen:
+                result = False
+            # 调转等于404页面的调转时
+            if goto == self.goto:
+                result = False
+            # url在跳转路径中
+            if (url in goto) or (goto in url):
+                result = False
+            if url.strip('/') == self.goto or url.strip('/') == goto:
+                result = False
+            for i in PAGE_404:
+                if i in text:
+                    result = False
+                    break
+            if title == self.title and title != 'None':
+                result = False
+            # 有些302跳转会在location里出现error或者404等关键字
+            if re.search(r'forbidden|error|404', goto):
+                result = False
+            # 文件内容类型对不上的情况
+            if re.search(r'\.bak$|\.zip$|\.rar$|\.7z$|\.old$|\.htaccess$|\.csv$|\.txt$|\.sql$|\.tar$|\.tar.gz$',
+                         url) and contype == 'html':
+                result = False
+            return result
+        except:
+            return False
+
     def parse_html(self, text):
         result = []
         soup = BeautifulSoup(text, 'html.parser')
         for i in soup.find_all(['a', 'img', 'script']):
-            if i.attrs:
-                result.append(i.attrs)
+            if i.get('src'):
+                result.append(i.get('src'))
+            if i.get('href'):
+                result.append(i.get('href'))
         return result
-    
+
     def check404(self, url):
         # 访问一个随机的页面记录404页面的长度与内容
         key = str(random.random() * 100)
         random_url = base64.b64encode(key.encode('utf-8'))
-        url = url + '/' + random_url.decode(
-            'utf-8') + '.html'
+        url = url + '/' + random_url.decode('utf-8') + '.html'
         try:
             self.notstr = '404page'
             r = self.req.get(url)
@@ -142,21 +194,18 @@ class DirScan():
                 self.notlen = len(r.content)
             if r.is_redirect:
                 self.goto = r.headers['Location']
-        except (requests.exceptions.ConnectTimeout,
-                requests.exceptions.ReadTimeout,
-                requests.exceptions.Timeout,
-                requests.exceptions.SSLError,
-                ssl.SSLError,
-                AttributeError,
-                socket.timeout):
+        except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout, requests.exceptions.Timeout,
+                requests.exceptions.SSLError, requests.exceptions.ConnectionError, ssl.SSLError, AttributeError,
+                ConnectionRefusedError, socket.timeout, urllib3.exceptions.ReadTimeoutError,
+                urllib3.exceptions.ProtocolError, OpenSSL.SSL.WantReadError):
             pass
-        
+
         except UnboundLocalError:
             pass
-        
+
         except Exception as e:
             logging.exception(e)
-    
+
     def scan(self, host):
         try:
             r = self.req.scan(host)
@@ -177,7 +226,7 @@ class DirScan():
                 content = r.raw.read()
             else:
                 content = r.raw.read(25000)
-            
+
             if ishtml:
                 coding = chardet.detect(content).get('encoding')
                 if coding:
@@ -186,25 +235,26 @@ class DirScan():
                 else:
                     text = 'Other'
                     title = None
-            
+
             else:
                 text = 'Other'
                 title = None
             if not rsp_len:
                 rsp_len = len(content)
-            if self._verify(r.url, r.status_code, contype, rsp_len, goto, text, title):
+
+            urlresult = parse.urlparse(host)
+            if self._verify(urlresult.path, r.status_code, contype, rsp_len, goto, text, title):
                 result = 0
                 if ishtml:
                     pagemd5 = self.parse_html(text)
                     if pagemd5 == self.notstr:
                         result = 1
                 if result < 0.5:
-                    if title == None:
+                    if title is None:
                         title = 'None'
                     else:
                         title = title.group()
                     title = re.sub(r'\n|\t', '', title)
-                    urlresult = parse.urlparse(host)
                     console('URLS', urlresult.netloc, urlresult.path + '\n')
                     data = {
                         urlresult.netloc: {
@@ -217,56 +267,55 @@ class DirScan():
                     }
                     self.outjson.append(data)
                     r.close()
-        
-        except (requests.exceptions.ConnectTimeout,
-                requests.exceptions.ReadTimeout,
-                requests.exceptions.Timeout,
-                requests.exceptions.SSLError,
-                ssl.SSLError,
-                socket.timeout):
+
+        except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout, requests.exceptions.Timeout,
+                requests.exceptions.SSLError, requests.exceptions.ConnectionError, ssl.SSLError, AttributeError,
+                ConnectionRefusedError, socket.timeout, urllib3.exceptions.ReadTimeoutError,
+                urllib3.exceptions.ProtocolError, OpenSSL.SSL.WantReadError):
             pass
-        
+
         except (UnboundLocalError, AttributeError):
             pass
-        
-        except UnicodeDecodeError as e:
+
+        except Exception as e:
             logging.exception(host)
             logging.exception(e)
-        
-        except Exception as e:
-            logging.exception(e)
-        
+
         try:
             r.close()
         except:
             pass
         return 'OK'
-    
+
     def save(self, urls):
         Sqldb(self.dbname).get_urls(urls)
-    
+
     def run(self, task):
         try:
             with concurrent.futures.ThreadPoolExecutor(max_workers=THREADS) as executor:
                 futures = [executor.submit(self.scan, i) for i in task]
-                for future in concurrent.futures.as_completed(futures, timeout=5):
+                for future in concurrent.futures.as_completed(futures, timeout=3):
                     future.result()
-            self.save(self.outjson)
-        except concurrent.futures._base.TimeoutError:
+
+        except (EOFError, concurrent.futures._base.TimeoutError):
             pass
-    
+
     # 创建启动任务
-    def pool(self, host):
+    def pool(self):
+        host = self.host.strip('/')
         self.check404(host)
         task = []
         urls = self.get_urls(host)
+        random.shuffle(urls)
         for url in urls:
             task.append(host + url)
         self.run(task)
+        # 保存结果
+        self.save(self.outjson)
 
 
 if __name__ == "__main__":
     start_time = time.time()
-    DirScan('result', ['php']).pool('http://127.0.0.1')
+    DirScan('result', ['php'], 'http://127.0.0.1').pool()
     end_time = time.time()
     print('\nrunning {0:.3f} seconds...'.format(end_time - start_time))

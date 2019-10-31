@@ -9,7 +9,7 @@ from lib.cli_output import console
 
 
 def osdetect(ip):
-    # sys.stdout.write(bcolors.RED + "\nOS：\n" + bcolors.ENDC)
+    # sys.stdout.write(Bcolors.RED + "\nOS：\n" + Bcolors.ENDC)
     nm = nmap.PortScanner()
     try:
         result = nm.scan(hosts=ip, arguments='-sS -O -vv -n -T4 -p 80,22,443')
@@ -20,7 +20,7 @@ def osdetect(ip):
                     return i.get('name')
             else:
                 break
-    except xml.etree.ElementTree.ParseError:
+    except (xml.etree.ElementTree.ParseError, nmap.nmap.PortScannerError):
         pass
     except Exception as e:
         console('OSdetect', ip, 'None\n')

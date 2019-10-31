@@ -1,6 +1,6 @@
 from urllib import parse
 import re
-import socket
+import dns.resolver
 
 
 def parse_host(url):
@@ -9,7 +9,7 @@ def parse_host(url):
         host = url.replace('http://', '').replace('https://', '').rstrip('/')
     else:
         host = url.replace('http://', '').replace('https://', '').rstrip('/')
-        host = re.sub('/\w+', '', host)
+        host = re.sub(r'/\w+', '', host)
     if ':' in host:
         host = re.sub(r':\d+', '', host)
     return host
@@ -18,7 +18,17 @@ def parse_host(url):
 def parse_ip(host):
     host = parse_host(host)
     # 根据domain得到ip 例如www.xxx.com 得到 x.x.x.x
-    host = socket.gethostbyname(host)
+    try:
+        resolver = dns.resolver.Resolver()
+        resolver.nameservers = ['1.1.1.1', '8.8.8.8']
+        a = resolver.query(host, 'A')
+        for i in a.response.answer:
+            for j in i.items:
+                if hasattr(j, 'address'):
+                    if not re.search(r'1\.1\.1\.1|8\.8\.8\.8|127\.0\.0\.1|114\.114\.114\.114|0\.0\.0\.0', j.address):
+                        return j.address
+    except Exception as e:
+        pass
     return host
 
 
@@ -46,7 +56,7 @@ def diff(urls):
             result.append(i)
             path.append(url.path)
             parms.append(k)
-    
+
     return result
 
 
@@ -68,3 +78,4 @@ def dedup_link(urls):
                     _.append(i)
     _.extend(diff(furls))
     return _
+

@@ -13,13 +13,16 @@ from lib.iscdn import iscdn
 
 def reverse_domain(host):
     # 查询旁站
-    # sys.stdout.write(bcolors.RED + "\nReverse IP Domain Check：\n" + bcolors.ENDC)
+    # sys.stdout.write(Bcolors.RED + "\nReverse IP Domain Check：\n" + Bcolors.ENDC)
     if iscdn(host):
         result = []
         data = {"remoteAddress": "{0}".format(host), "key": ""}
         header = get_ua()
         try:
-            r = requests.post('https://domains.yougetsignal.com/domains.php', headers=header, data=data, timeout=5,
+            r = requests.post('https://domains.yougetsignal.com/domains.php',
+                              headers=header,
+                              data=data,
+                              timeout=5,
                               verify=False)
             text = json.loads(r.text)
             domain = tldextract.extract(host)
@@ -32,8 +35,10 @@ def reverse_domain(host):
                         result.append(url)
         except:
             try:
-                r = requests.get('http://api.hackertarget.com/reverseiplookup/?q={}'.format(host), headers=get_ua(),
-                                 timeout=4, verify=False)
+                r = requests.get('http://api.hackertarget.com/reverseiplookup/?q={}'.format(host),
+                                 headers=get_ua(),
+                                 timeout=4,
+                                 verify=False)
                 if '<html>' not in r.text and 'No DNS A records found for' not in r.text:
                     text = r.text
                     for _ in text.split('\n'):
@@ -52,5 +57,5 @@ def reverse_domain(host):
             return result
         else:
             console('reverse_domain', host, 'The maximum number of domain names exceeded (20)\n')
-            # sys.stdout.write(bcolors.OKGREEN + 'The maximum number of domain names exceeded (20)\n' + bcolors.ENDC)
+            # sys.stdout.write(Bcolors.OKGREEN + 'The maximum number of domain names exceeded (20)\n' + Bcolors.ENDC)
             return ['The maximum number of domain names exceeded (20)']

@@ -7,10 +7,10 @@ import geoip2.errors
 import logging
 from lib.cli_output import console
 
+
 def geoip(ipaddr):
     # 获取IP地理位置
     try:
-        geoip2.database
         reader = geoip2.database.Reader('data/GeoLite2-City.mmdb')
         response = reader.city(ipaddr)
         country = response.country.names["zh-CN"]
@@ -23,7 +23,7 @@ def geoip(ipaddr):
         address = '{} {} {}'.format(country, site, city)
     except FileNotFoundError:
         address = 'Geoip File Not Found'
-    except geoip2.errors.AddressNotFoundError:
+    except (KeyError, geoip2.errors.AddressNotFoundError):
         address = 'Address Not In Databases'
     except Exception as e:
         logging.exception(e)

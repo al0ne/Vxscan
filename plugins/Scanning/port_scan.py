@@ -9,7 +9,6 @@ import sys
 import os
 import time
 import logging
-import traceback
 import random
 from urllib import parse
 from lib.cli_output import console
@@ -17,7 +16,7 @@ from lib.sqldb import Sqldb
 
 sys.path.append(os.getcwd())
 
-THREADNUM = 150  # 线程数
+THREADNUM = 100  # 线程数
 
 SIGNS = (
     # 协议 | 版本 | 关键字
@@ -262,15 +261,19 @@ PORTS = [
 PROBE = {'GET / HTTP/1.0\r\n\r\n'}
 
 
-class ScanPort():
-    def __init__(self, ipaddr):
+class ScanPort:
+    def __init__(self, ipaddr, dbname):
         self.ipaddr = ipaddr
         self.port = []
+        self.dbname = dbname
         self.out = []
         self.num = 0
 
     def regex(self, response, port):
         match = False
+
+        if re.search(b'<title>502 Bad Gateway', response):
+            return match
 
         for pattern in SIGNS:
             pattern = pattern.split(b'|')
@@ -287,10 +290,10 @@ class ScanPort():
     def socket_scan(self, hosts):
         global PROBE
         response = ''
-        socket.setdefaulttimeout(1.5)
+        socket.setdefaulttimeout(2)
         ip, port = hosts.split(':')
         try:
-            if len(self.port) < 100:
+            if len(self.port) < 30:
                 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 result = sock.connect_ex((ip, int(port)))
                 # 建立3次握手成功
@@ -323,7 +326,7 @@ class ScanPort():
             logging.exception(e)
 
     def save(self, ipaddr, result):
-        Sqldb('result').get_ports(ipaddr, result)
+        Sqldb(self.dbname).get_ports(ipaddr, result)
 
     def run(self, ip):
         hosts = []
@@ -338,7 +341,7 @@ class ScanPort():
                     future.result()
                     if self.num == 1:
                         break
-        except EOFError:
+        except (EOFError, concurrent.futures._base.TimeoutError):
             pass
 
     def pool(self):
@@ -374,7 +377,7 @@ class ScanPort():
 
 if __name__ == "__main__":
     start_time = time.time()
-    ScanPort('127.0.0.1').pool()
+    ScanPort('127.0.0.1', 'result').pool()
     # print(len(PORTS))
     end_time = time.time()
     print('\nrunning {0:.3f} seconds...'.format(end_time - start_time))

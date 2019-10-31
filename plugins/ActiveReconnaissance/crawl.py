@@ -9,11 +9,29 @@ from lib.sqldb import Sqldb
 from plugins.InformationGathering.js_leaks import JsLeaks
 
 
-class crawl():
-    def __init__(self, host):
+def dedup_url(urls):
+    urls = list(set(urls))
+    result = []
+    okurl = []
+    for i in urls:
+        urlparse = parse.urlparse(i)
+        path = urlparse.path
+        if path and path.split('/')[-2]:
+            key = path.split('/')[-2]
+            if key not in result:
+                result.append(key)
+                okurl.append(i)
+        else:
+            okurl.append(i)
+    return okurl
+
+
+class Crawl:
+    def __init__(self, host, dbname):
         self.urls = []
         self.js = []
         self.domain = ''
+        self.dbname = dbname
         self.host = host
         self.result = []
         self.req = Requests()
@@ -34,22 +52,6 @@ class crawl():
             pass
         except Exception as e:
             logging.exception(e)
-
-    def dedup_url(self, urls):
-        urls = list(set(urls))
-        result = []
-        okurl = []
-        for i in urls:
-            urlparse = parse.urlparse(i)
-            path = urlparse.path
-            if path and path.split('/')[-2]:
-                key = path.split('/')[-2]
-                if key not in result:
-                    result.append(key)
-                    okurl.append(i)
-            else:
-                okurl.append(i)
-        return okurl
 
     def extr(self, url, body):
         # html页面内提取邮箱
@@ -107,7 +109,9 @@ class crawl():
             pass
         except Exception as e:
             logging.exception(e)
-        self.urls = self.dedup_url(self.urls)
+            
+        self.urls = dedup_url(self.urls)
+        
         return list(set(self.urls))
 
     def pool(self):
@@ -130,8 +134,8 @@ class crawl():
         for i in self.result:
             console('Crawl', self.host, i + '\n')
 
-        Sqldb('result').get_crawl(self.domain, self.result)
+        Sqldb(self.dbname).get_crawl(self.domain, self.result)
 
 
 if __name__ == "__main__":
-    crawl('https://127.0.0.1').pool()
+    Crawl('https://www.xxx.com').pool()

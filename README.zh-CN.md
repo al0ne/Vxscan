@@ -12,10 +12,13 @@ python3写的综合扫描工具，主要用来敏感文件探测(目录扫描与
 
 # Update  
 
+2019.10.31  
+目录扫描使用了uvloop+asyncio+aiohttp  
+修复了一堆BUG  
+404页面验证添加了更多逻辑  
 2019.9.20  
 删除了暴力破解模块，实在是太慢了  
 修复了端口扫描和目录扫描的BUG  
-
 2019.8.19  
 添加了禁止扫描gov.cn与edu.cn域名，程序检测到会立即终止运行  
 修改了程序输出界面 改为时间+插件+域名+结果样式  
@@ -43,18 +46,21 @@ Requirements
 --------
 
 Python version > 3.6    
-requests  
-pyfiglet  
-fake-useragent  
-beautifulsoup4  
-geoip2  
-python-nmap  
-tldextract  
-lxml  
-pymongo  
-virustotal_python  
-dnspython  
-pysocks  
+requests
+pyfiglet
+fake-useragent
+beautifulsoup4
+pymysql
+python-nmap
+geoip2
+tldextract
+lxml
+pymongo
+virustotal_python
+dnspython
+pysocks 
+
+apt install nmap  
 
 wget https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz  
 After decompressing, put GeoLite2-City.mmdb inside to vxscan/data/GeoLite2-City.mmdb  
@@ -127,6 +133,7 @@ optional arguments:
   -h, --help            show this help message and exit  
   -u URL, --url URL     Start scanning this url -u xxx.com  
   -i INET, --inet INET  cidr eg. 1.1.1.1 or 1.1.1.0/24  
+  -s SAVE, --save SAVE  save in dbfile  
   -f FILE, --file FILE  read the url from the file  
 ```  
 
@@ -143,29 +150,28 @@ Structure
 /
 ├─Vxscan.py  主文件
 ├─data
+│  ├─path  urls路径
 │  ├─apps.json  Web指纹信息
 │  ├─apps.txt  Web指纹信息(WEBEYE)
 │  ├─GeoLite2-ASN.mmdb      geoip
 │  ├─GeoLite2-City.mmdb     asn
 ├─doc    存放一些图片或者文档资源
 ├─report    html报告相关内容
-├─lib       
-│  ├─common.py    判断CDN、端口扫描、POC扫描等
-│  ├─color.py    终端颜色输出
+├─lib  
+│  ├─bcolor.py    终端颜色输出  
 │  ├─cli_output.py   终端输出
-│  ├─active.py   判断dns解析与ping ip存活
-│  ├─save_html.py     生成html报表
-│  ├─waf.py     waf规则
-│  ├─options.py     选项设置
+│  ├─common.py    判断CDN、端口扫描、POC扫描等
 │  ├─iscdn.py     根据ip段和asn范围来判断IP是不是CDN
-│  ├─osdetect.py   操作系统版本识别
+│  ├─options.py     选项设置
 │  ├─random_header.py   自定义header头
+│  ├─Requests.py   封装的requests库，做一些自定义设置
 │  ├─settings.py      设置脚本
-│  ├─vuln.py      批量调用POC扫描
+│  ├─sqldb.py      所有与sqlite3有关的都在这里
 │  ├─url.py     对抓取的连接进行去重
 │  ├─verify.py     script脚本提供验证接口
-│  ├─sqldb.py      所有与sqlite3有关的都在这里
-│  ├─Requests.py   封装的requests库，做一些自定义设置
+│  ├─vuln.py      批量调用POC扫描
+│  ├─waf.py     waf规则
+│  ├─webinfo.py  web信息获取   
 ├─script  
 │  ├─Poc.py         Poc脚本
 │  ├─......
@@ -184,6 +190,7 @@ Structure
 │    ├─virustotal.py        VT Pdns查询
 │    ├─wappalyzer.py      CMS被动指纹识别
 │  ├─Scanning
+│    ├─async_scan   异步扫描
 │    ├─dir_scan     目录扫描
 │    ├─port_scan    端口扫描
 
@@ -201,24 +208,27 @@ SETTING
 # 全局超时时间
 TIMEOUT = 5
 
+# 国家验证
+VERIFY_COUNTRY = True
+
 # 要排除的状态吗
-BLOCK_CODE = [
-    301, 403, 308, 404, 405, 406, 408, 411, 417, 429, 493, 502, 503, 504, 999
-]
+BLOCK_CODE = [0, 308, 400, 401, 403, 404, 405, 406, 408, 410, 411, 417, 418, 429, 493, 500, 502, 503, 504, 999]
 # 设置扫描线程
 THREADS = 100
 # 要排除的 内容类型
 BLOCK_CONTYPE = [
-    'image/jpeg', 'image/gif', 'image/png', 'application/javascript',
-    'application/x-javascript', 'text/css', 'application/x-shockwave-flash',
-    'text/javascript', 'image/x-icon'
+    'image/jpeg', 'image/gif', 'image/png', 'application/javascript', 'application/x-javascript', 'text/css',
+    'application/x-shockwave-flash', 'text/javascript', 'image/x-icon', 'x-icon'
 ]
 
-# 是否跳过目录扫描
+# 是否启动目录扫描
 SCANDIR = True
 
 # 是否启动POC插件
 POC = True
+
+# 是否开启抓取插件
+CRAWL = False
 
 # 如果存在于结果db中就跳过
 CHECK_DB = False
@@ -226,8 +236,7 @@ CHECK_DB = False
 # 无效的404页面
 PAGE_404 = [
     'page_404"', "404.png", '找不到页面', '页面找不到', "Not Found", "访问的页面不存在",
-    "page does't exist", 'notice_404', '404 not found', '<title>错误</title>', '内容正在加载', '提示：发生错误', '<title>网站防火墙',
-    '无法加载控制器'
+    "page does't exist", 'notice_404', '404 not found'
 ]
 
 # ping探测
@@ -244,7 +253,9 @@ SHODAN_API = ''
 VIRUSTOTAL_API = ''
 
 # 设置cookie
-COOKIE = {'Cookie': 'test'}
+COOKIE = 'random'
+# COOKIE = {'Cookie': 'SRCtest'}
+
 
 ```
 POC
@@ -258,7 +269,7 @@ from lib.verify import verify
 timeout = 2
 vuln = ['27017', 'Mongodb']
 
-def check(ip, ports, apps):
+def check(url, ip, ports, apps):
     # verify用来验证扫描列表中是否有Mongodb相关的结果，如果端口没有开启则不进行扫描
     if verify(vuln, ports, apps):
         try:
@@ -290,7 +301,7 @@ def get_title(url):
         pass
 
 
-def check(ip, ports, apps):
+def check(url, ip, ports, apps):
     result = []
     probe = get_list(ip, ports)
     for i in probe:

@@ -14,12 +14,13 @@ from lib.sqldb import Sqldb
 from lib.url import parse_host
 
 
-class Vuln():
-    def __init__(self, url, host, ports, apps):
+class Vuln:
+    def __init__(self, url, host, ports, apps, dbname):
         host = parse_host(host)
         self.url = url
         self.ip = host
         self.apps = apps
+        self.dbname = dbname
         self.ports = ports
         self.out = []
 
@@ -49,7 +50,7 @@ class Vuln():
             for i in self.out:
                 console('Vuln', self.ip, i + '\n')
 
-            Sqldb('result').get_vuln(self.ip, self.out)
+            Sqldb(self.dbname).get_vuln(self.ip, self.out)
         except (EOFError, concurrent.futures._base.TimeoutError):
             pass
         except Exception as e:
@@ -58,6 +59,6 @@ class Vuln():
 
 if __name__ == "__main__":
     start_time = time.time()
-    Vuln(['127.0.0.1']).run()
+    Vuln('', [''], [''], [''],'').run()
     end_time = time.time()
     print('\nrunning {0:.3f} seconds...'.format(end_time - start_time))

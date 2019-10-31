@@ -6,7 +6,7 @@ import re
 from lib.Requests import Requests
 from lib.verify import get_list
 
-path = ['/1.php', '/p.php', '/phpinfo.php', '/info.php', '/i.php', '/test.php', '/a.php', '/?phpinfo=1']
+path = ['/1.php', '/p.php', '/phpinfo.php', '/info.php', '/i.php', '/test.php', '/a.php', '/?phpinfo=1', '/111.php']
 
 
 def get_info(url):

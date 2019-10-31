@@ -3,15 +3,13 @@
 import sqlite3
 import time
 import hashlib
-import sys
 import re
 import logging
 from lib.cli_output import console
-from lib.bcolors import bcolors
 from lib.url import parse_host
 
 
-class Sqldb():
+class Sqldb:
     def __init__(self, dbname):
         self.name = dbname
         self.conn = sqlite3.connect(self.name + '.db', check_same_thread=False)
@@ -100,7 +98,7 @@ class Sqldb():
         try:
             cursor = self.conn.cursor()
             cursor.execute("""
-                CREATE TABLE IF NOT EXISTS crawl (
+                CREATE TABLE IF NOT EXISTS Crawl (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 time varchar(255),
                 domain varchar(255),
@@ -159,7 +157,7 @@ class Sqldb():
                 strings = str(k) + str(v.get('title')) + str(v.get('url'))
                 md5sum.update(strings.encode('utf-8'))
                 md5 = md5sum.hexdigest()
-                values = (timestamp, k, v.get('title'), k + v.get('url'), v.get('contype'), v.get('rsp_len'),
+                values = (timestamp, k, v.get('title'), v.get('url'), v.get('contype'), v.get('rsp_len'),
                           v.get('rsp_code'), md5)
                 query = "INSERT OR IGNORE INTO urls (time, domain, title, url, contype, rsp_len,rsp_code,md5) VALUES (?,?,?,?,?,?,?,?)"
                 self.insert_urls(query, values)
@@ -173,8 +171,8 @@ class Sqldb():
             service = i.get('server')
             port = i.get('port')
             banner = i.get('banner')
-            banner = re.sub('<', '\<', banner)
-            banner = re.sub('>', '\>', banner)
+            banner = re.sub('<', '\u003c', banner)
+            banner = re.sub('>', '\u003e', banner)
             md5sum = hashlib.md5()
             strings = str(ipaddr) + str(service) + str(port)
             md5sum.update(strings.encode('utf-8'))
@@ -214,7 +212,7 @@ class Sqldb():
             md5sum.update(strings.encode('utf-8'))
             md5 = md5sum.hexdigest()
             values = (timestamp, domain, type, i, md5)
-            query = "INSERT OR IGNORE INTO crawl (time, domain, type, leaks, md5) VALUES (?,?,?,?,?)"
+            query = "INSERT OR IGNORE INTO Crawl (time, domain, type, leaks, md5) VALUES (?,?,?,?,?)"
             self.insert_crawl(query, values)
         self.commit()
         self.close()
@@ -280,7 +278,7 @@ class Sqldb():
                     result.append(i)
                 else:
                     console('CheckDB', i, 'In the db file\n')
-                    # sys.stdout.write(bcolors.OKGREEN + "{} In the db file\n".format(i) + bcolors.ENDC)
+                    # sys.stdout.write(Bcolors.OKGREEN + "{} In the db file\n".format(i) + Bcolors.ENDC)
             except sqlite3.OperationalError:
                 return hosts
             except Exception as e:

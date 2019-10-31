@@ -9,7 +9,16 @@ from lib.Requests import Requests
 import concurrent.futures
 
 
-class JsLeaks():
+def verify(text):
+    result = True
+    for i in text:
+        if not re.search(r'^0\d\.\d+\.\d+\.\d+|google|png$|gif$|jpg$|\b\d+\.\d+\.0\.0', i):
+            result = False
+            break
+    return result
+
+
+class JsLeaks:
     def __init__(self):
         self.result = []
         self.req = Requests()
@@ -26,14 +35,6 @@ class JsLeaks():
             logging.exception(e)
 
         return self.result
-
-    def verify(self, text):
-        result = True
-        for i in text:
-            if not re.search(r'^0\d\.\d+\.\d+\.\d+|google|png$|gif$|jpg$|\b\d+\.\d+\.0\.0', i):
-                result = False
-                break
-        return result
 
     def get_js(self, url):
         r = self.req.get(url)
@@ -66,15 +67,15 @@ class JsLeaks():
         )
         for _ in regex:
             text = re.findall(_, r.text[:100000], re.M | re.I)
-            if text is not None and self.verify(text):
+            if text is not None and verify(text):
                 text = list(map(lambda x: url + ' Leaks: ' + x, text))
                 self.result.extend(text)
 
 
 if __name__ == "__main__":
     start_time = time.time()
-    urls = ['https://www.baidu.com']
-    jsparse = JsLeaks().pool(urls)
+    urls1 = ['https://www.xxx.com']
+    jsparse = JsLeaks().pool(urls1)
     print(jsparse)
     end_time = time.time()
     print('\nrunning {0:.3f} seconds...'.format(end_time - start_time))

@@ -4,6 +4,7 @@ import re
 import hashlib
 import logging
 import random
+from lib.url import parse_host
 from lib.Requests import Requests
 from urllib import parse
 
@@ -35,6 +36,7 @@ def get_list(ip, ports):
     for i in ports:
         server, port = i.split(':')
         server = server.lower()
+        ip = parse_host(ip)
         if (server == 'http') and not (server == 'http' and port == '443'):
             url = server + '://' + ip + ':' + port
             if ':80' in url:
@@ -46,10 +48,10 @@ def get_list(ip, ports):
             result.append(url)
         if server == 'https':
             url = server + '://' + ip + ':' + port
-            url = re.sub(r':443$', '', url)
+            url = re.sub(r':443$|:80$', '', url)
             result.append(url)
-    
-    return result
+
+    return list(set(result))
 
 
 def get_hosts(ip, username):
@@ -65,20 +67,29 @@ def get_hosts(ip, username):
 
 
 def verify_https(url):
+    # 验证域名是http或者https的
+    # 如果域名是302跳转 则获取跳转后的地址
     req = Requests()
     url2 = parse.urlparse(url)
     if url2.netloc:
         url = url2.netloc
     elif url2.path:
         url = url2.path
+    # noinspection PyBroadException
     try:
-        req.get('https://' + url)
+        r = req.get('https://' + url)
+        getattr(r, 'status_code')
+        if r.status_code == 302 or r.status_code == 301:
+            r = req.get('https://' + 'www.' + url)
+            if r.status_code == 200:
+                return 'https://' + 'www.' + url
         return 'https://' + url
     except Exception as e:
+        # noinspection PyBroadException
         try:
             req.get('http://' + url)
             return 'http://' + url
-        except:
+        except Exception:
             pass
 
 
@@ -105,3 +116,36 @@ def verify_ext(apps):
         logging.exception(e)
     ext.extend(['txt', 'xml', 'html'])
     return ext
+
+
+def verify_country(url):
+    # 此过滤功能是为了过滤掉一些源码相同但是网站语言不一样的域名
+    # 国家列表
+    count = [
+        r'^ad\.', r'^ae\.', r'^af\.', r'^ag\.', r'^ai\.', r'^al\.', r'^am\.', r'^ao\.', r'^ar\.', r'^at\.', r'^au\.',
+        r'^az\.', r'^bb\.', r'^bd\.', r'^be\.', r'^bf\.', r'^bg\.', r'^bh\.', r'^bi\.', r'^bj\.', r'^bl\.', r'^bm\.',
+        r'^bn\.', r'^bo\.', r'^br\.', r'^bs\.', r'^bw\.', r'^by\.', r'^bz\.', r'^ca\.', r'^cf\.', r'^cg\.', r'^ch\.',
+        r'^ck\.', r'^cl\.', r'^cm\.', r'^cn\.', r'^co\.', r'^cr\.', r'^cs\.', r'^cu\.', r'^cy\.', r'^cz\.', r'^de\.',
+        r'^dj\.', r'^dk\.', r'^do\.', r'^dz\.', r'^ec\.', r'^ee\.', r'^eg\.', r'^es\.', r'^et\.', r'^fi\.', r'^fj\.',
+        r'^fr\.', r'^ga\.', r'^gb\.', r'^gd\.', r'^ge\.', r'^gf\.', r'^gh\.', r'^gi\.', r'^gm\.', r'^gn\.', r'^gr\.',
+        r'^gt\.', r'^gu\.', r'^gy\.', r'^hk\.', r'^hn\.', r'^ht\.', r'^hu\.', r'^id\.', r'^ie\.', r'^il\.', r'^in\.',
+        r'^iq\.', r'^ir\.', r'^is\.', r'^it\.', r'^jm\.', r'^jo\.', r'^jp\.', r'^ke\.', r'^kg\.', r'^kh\.', r'^kp\.',
+        r'^kr\.', r'^kt\.', r'^kw\.', r'^kz\.', r'^la\.', r'^lb\.', r'^lc\.', r'^li\.', r'^lk\.', r'^lr\.', r'^ls\.',
+        r'^lt\.', r'^lu\.', r'^lv\.', r'^ly\.', r'^ma\.', r'^mc\.', r'^md\.', r'^mg\.', r'^ml\.', r'^mm\.', r'^mn\.',
+        r'^mo\.', r'^ms\.', r'^mt\.', r'^mu\.', r'^mv\.', r'^mw\.', r'^mx\.', r'^my\.', r'^mz\.', r'^na\.', r'^ne\.',
+        r'^ng\.', r'^ni\.', r'^nl\.', r'^no\.', r'^np\.', r'^nr\.', r'^nz\.', r'^om\.', r'^pa\.', r'^pe\.', r'^pf\.',
+        r'^pg\.', r'^ph\.', r'^pk\.', r'^pl\.', r'^pr\.', r'^pt\.', r'^py\.', r'^qa\.', r'^ro\.', r'^ru\.', r'^sa\.',
+        r'^sb\.', r'^sc\.', r'^sd\.', r'^se\.', r'^sg\.', r'^si\.', r'^sk\.', r'^sl\.', r'^sm\.', r'^sn\.', r'^so\.',
+        r'^sr\.', r'^st\.', r'^sv\.', r'^sy\.', r'^sz\.', r'^td\.', r'^tg\.', r'^th\.', r'^tj\.', r'^tm\.', r'^tn\.',
+        r'^to\.', r'^tr\.', r'^tt\.', r'^tw\.', r'^tz\.', r'^ua\.', r'^ug\.', r'^us\.', r'^uy\.', r'^uz\.', r'^vc\.',
+        r'^ve\.', r'^vn\.', r'^ye\.', r'^yu\.', r'^za\.', r'^zm\.', r'^zr\.', r'^zw\.', r'^en\.'
+    ]
+
+    if re.search(r'\d+\.\d+\.\d+\.\d+', url):
+        return False
+
+    for i in count:
+        if re.search(i, url):
+            return True
+
+    return False

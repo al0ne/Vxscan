@@ -10,7 +10,7 @@ from lib.verify import get_list
 vuln = ['java', 'jsp']
 
 
-class struts():
+class StrutsCheck:
     def __init__(self, ip):
         self.url = ip
         self.result = []
@@ -51,7 +51,7 @@ class struts():
             text = request.urlopen(r).read()
         except http.client.IncompleteRead as e:
             text = e.partial
-        except:
+        except Exception:
             pass
         if 'text' in locals().keys():
             self.random = str(self.random)
@@ -68,7 +68,7 @@ class struts():
         except http.client.IncompleteRead as e:
             text = e.partial
         except:
-            pass
+            text = b''
         if 'text' in locals().keys():
             self.random = str(self.random)
             if self.random.encode('utf-8') in text and len(text) < 15:
@@ -86,5 +86,5 @@ def check(url, ip, ports, apps):
     output = []
     probe = get_list(url, ports)
     for i in probe:
-        output.extend(struts(i).run())
+        output.extend(StrutsCheck(i).run())
     return output
