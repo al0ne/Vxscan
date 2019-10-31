@@ -13,4 +13,5 @@ pysocks
 asyncio
 aiohttp
 chardet
+uvloop
 urllib3
