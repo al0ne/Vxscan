@@ -1,6 +1,7 @@
 # coding=utf-8
-import re
 import logging
+import re
+
 from lib.Requests import Requests
 
 

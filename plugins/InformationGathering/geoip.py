@@ -2,9 +2,11 @@
 # author: al0ne
 # https://github.com/al0ne
 
+import logging
+
 import geoip2.database
 import geoip2.errors
-import logging
+
 from lib.cli_output import console
 
 

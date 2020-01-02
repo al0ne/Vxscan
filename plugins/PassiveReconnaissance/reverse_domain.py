@@ -2,18 +2,22 @@
 # author: al0ne
 # https://github.com/al0ne
 
-import requests
 import json
-import tldextract
 import re
+import sys
+
+import requests
+import tldextract
+
+from lib.bcolors import Bcolors
 from lib.cli_output import console
-from lib.random_header import get_ua
 from lib.iscdn import iscdn
+from lib.random_header import get_ua
 
 
 def reverse_domain(host):
     # 查询旁站
-    # sys.stdout.write(Bcolors.RED + "\nReverse IP Domain Check：\n" + Bcolors.ENDC)
+    sys.stdout.write(Bcolors.RED + "\nReverse IP Domain Check：\n" + Bcolors.ENDC)
     if iscdn(host):
         result = []
         data = {"remoteAddress": "{0}".format(host), "key": ""}
@@ -59,3 +63,7 @@ def reverse_domain(host):
             console('reverse_domain', host, 'The maximum number of domain names exceeded (20)\n')
             # sys.stdout.write(Bcolors.OKGREEN + 'The maximum number of domain names exceeded (20)\n' + Bcolors.ENDC)
             return ['The maximum number of domain names exceeded (20)']
+
+
+if __name__ == "__main__":
+    print(reverse_domain('testphp.vulnweb.com'))

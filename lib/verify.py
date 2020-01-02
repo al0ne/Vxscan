@@ -1,12 +1,14 @@
 # coding=utf-8
 
-import re
 import hashlib
 import logging
 import random
-from lib.url import parse_host
-from lib.Requests import Requests
+import re
 from urllib import parse
+
+from lib.Requests import Requests
+from lib.cli_output import console
+from lib.url import parse_host
 
 apps = None
 ports = ['CDN:0']
@@ -70,6 +72,14 @@ def verify_https(url):
     # 验证域名是http或者https的
     # 如果域名是302跳转 则获取跳转后的地址
     req = Requests()
+    # noinspection PyBroadException
+    if '://' in url:
+        try:
+            r = req.get(url)
+            return url
+        except Exception as e:
+            pass
+    host = parse_host(url)
     url2 = parse.urlparse(url)
     if url2.netloc:
         url = url2.netloc
@@ -79,18 +89,18 @@ def verify_https(url):
     try:
         r = req.get('https://' + url)
         getattr(r, 'status_code')
-        if r.status_code == 302 or r.status_code == 301:
-            r = req.get('https://' + 'www.' + url)
-            if r.status_code == 200:
-                return 'https://' + 'www.' + url
+        console('Verify', host, 'https://' + url + '\n')
         return 'https://' + url
-    except Exception as e:
+    except AttributeError:
         # noinspection PyBroadException
         try:
             req.get('http://' + url)
+            console('Verify', host, 'http://' + url + '\n')
             return 'http://' + url
         except Exception:
             pass
+    except Exception as e:
+        logging.exception(e)
 
 
 def get_md5():

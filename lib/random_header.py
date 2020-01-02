@@ -5,6 +5,7 @@ import random
 import socket
 import string
 import struct
+
 from fake_useragent import UserAgent
 
 HEADERS = {

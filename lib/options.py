@@ -1,10 +1,11 @@
 # coding=utf-8
 import argparse
 import ipaddress
-import time
 import logging
-from lib.common import start
+import time
+
 from lib.cli_output import start_out
+from lib.common import start
 from plugins.ActiveReconnaissance.active import ActiveCheck
 from report import gener
 

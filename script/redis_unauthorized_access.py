@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import socket
+
 from lib.verify import verify
 
 vuln = ['redis', '6379']

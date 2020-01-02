@@ -1,15 +1,16 @@
 # coding=utf-8
+import logging
+
 import chardet
-from lib.iscdn import iscdn
-from plugins.ActiveReconnaissance.osdetect import osdetect
-from plugins.PassiveReconnaissance.virustotal import virustotal
-from plugins.PassiveReconnaissance.reverse_domain import reverse_domain
-from lib.url import parse_host, parse_ip
-from plugins.InformationGathering.geoip import geoip
+
 from lib.Requests import Requests
 from lib.cli_output import console
-from plugins.PassiveReconnaissance.wappalyzer import WebPage
+from lib.iscdn import iscdn
+from lib.url import parse_host, parse_ip
 from plugins.ActiveReconnaissance.check_waf import checkwaf
+from plugins.ActiveReconnaissance.osdetect import osdetect
+from plugins.InformationGathering.geoip import geoip
+from plugins.PassiveReconnaissance.wappalyzer import WebPage
 
 
 def web_info(url):
@@ -25,10 +26,11 @@ def web_info(url):
         coding = chardet.detect(r.content).get('encoding')
         r.encoding = coding
         webinfo = WebPage(r.url, r.text, r.headers).info()
-    except Exception:
+    except Exception as e:
+        logging.exception(e)
         webinfo = {}
     if webinfo:
-        console('Webinfo', host, 'Title: {}\n'.format(webinfo.get('title')))
+        console('Webinfo', host, 'title: {}\n'.format(webinfo.get('title')))
         console('Webinfo', host, 'Fingerprint: {}\n'.format(webinfo.get('apps')))
         console('Webinfo', host, 'Server: {}\n'.format(webinfo.get('server')))
         console('Webinfo', host, 'WAF: {}\n'.format(wafresult))
@@ -39,10 +41,7 @@ def web_info(url):
         osname = osdetect(host)
     else:
         osname = None
-    pdns = virustotal(host)
-    reverseip = reverse_domain(host)
-    webinfo.update({"pdns": pdns})
-    webinfo.update({"reverseip": reverseip})
+    
     data = {
         host: {
             'WAF': wafresult,
@@ -52,6 +51,7 @@ def web_info(url):
             'OS': osname,
         }
     }
+    
     return data, webinfo.get('apps'), webinfo.get('title')
 
 

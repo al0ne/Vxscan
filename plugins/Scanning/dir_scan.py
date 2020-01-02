@@ -2,26 +2,28 @@
 # author: al0ne
 # https://github.com/al0ne
 
-import re
 import base64
-import urllib3
+import concurrent.futures
 import glob
 import itertools
-import concurrent.futures
 import logging
-import ssl
-import chardet
-import socket
-import OpenSSL
-import requests
 import random
+import re
+import socket
+import ssl
 from urllib import parse
+
+import OpenSSL
+import chardet
+import requests
+import urllib3
 from bs4 import BeautifulSoup
-from lib.verify import verify_ext
-from lib.sqldb import Sqldb
-from lib.settings import *
-from lib.cli_output import *
+
 from lib.Requests import Requests
+from lib.cli_output import *
+from lib.settings import *
+from lib.sqldb import Sqldb
+from lib.verify import verify_ext
 from plugins.ActiveReconnaissance.robots import robots
 
 
@@ -69,60 +71,27 @@ class DirScan():
                     path.append(i.strip())
         leaks = Cartesian()
         leaks.add_data([
-            '/www',
-            '/1',
-            '/2016',
-            '/2017',
-            '/2018',
-            '/2019',
-            '/wwwroot',
-            '/backup',
-            '/index',
-            '/web',
-            '/test',
-            '/tmp',
-            '/default',
-            '/temp',
-            '/website',
-            '/upload',
-            '/bin',
-            '/bbs',
-            '/www1',
-            '/www2',
-            '/log',
-            '/extra',
-            '/file',
-            '/qq',
-            '/up',
-            '/config',
-            '/' + domain,
-            '/userlist',
-            '/dev',
-            '/a',
-            '/123',
-            '/sysadmin',
-            '/localhost',
-            '/111',
-            '/access',
-            '/old',
-            '/i',
-            '/vip',
-            '/index.php',
-            '/global',
-            '/key',
-            '/webroot',
-            '/out',
-            '/server',
+            '/www', '/1', '/2016', '/2017', '/2018', '/2019', '/wwwroot', '/backup', '/index', '/web', '/test', '/tmp',
+            '/default', '/temp', '/data', '/dump', '/database', '/web', '/ftp', '/sql', '/data', '/website', '/upload',
+            '/bin', '/bbs', '/www1', '/www2', '/log', '/site', '/2', '/htdocs', '/w', '/back', '/admin', '/export',
+            '/extra', '/file', '/qq', '/up', '/config', '/' + domain, '/userlist', '/dev', '/a', '/123', '/sysadmin',
+            '/localhost', '/shop', '/sys', '/root', '/install', '/webserver', '/users', '/111', '/access', '/old', '/i',
+            '/vip', '/index.php', '/global', '/key', '/webroot', '/out', '/server', '/db', '/备份', '/新建文件夹', '/网站',
+            '/uc_server', '/beifen', '/joomla', '/login', '/crack', '/wangzhan', '/' + domain2, '/' + domain3, '/list'
         ])
         leaks.add_data([
             '.tar.gz', '.zip', '.rar', '.sql', '.7z', '.bak', '.tar', '.txt', '.tgz', '.swp', '~', '.old', '.tar.bz2',
-            '.data', '.csv'
+            '.data', '.csv', '.log', '.tmp', '.gz', '.bak~', '.sh'
         ])
         path.extend(leaks.build())
         index = Cartesian()
         index.add_data([
             '/1', '/l', '/info', '/index', '/admin', '/login', '/qq', '/q', '/search', '/install', '/default', '/cmd',
-            '/upload', '/test', '/manage', '/loading', '/left', '/zzzz', '/welcome', '/ma', '/66'
+            '/upload', '/test', '/shell', '/p', '/a', '/userinfo', '/api', '/common', '/web', '/manage', '/loading',
+            '/left', '/zzzz', '/welcome', '/ma', '/66', '/c', '/2', '/fuck', '/11', '/error', '/403', '/123', '/3',
+            '/css', '/x', '/md5', '/xx', '/out', '/config', '/asd', '/result', '/conn', '/password', '/cmdshell', '/k',
+            '/s', '/test1', '/up', '/xxxx', '/exp', '/shell1', '/shell2', '/i', '/aa', '/2011', '/2012', '/2013',
+            '/2016', '/2017', '/2018', '/2019', '/dama', '/list', '/list2'
         ])
         index.add_data(ext)
         path.extend(index.build())

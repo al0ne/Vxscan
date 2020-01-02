@@ -2,11 +2,13 @@
 # author: al0ne
 # https://github.com/al0ne
 
-from lib.verify import get_list
-from lxml import etree
-from lib.Requests import Requests
-import chardet
 import re
+
+import chardet
+from lxml import etree
+
+from lib.Requests import Requests
+from lib.verify import get_list
 
 req = Requests()
 

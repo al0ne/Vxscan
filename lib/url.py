@@ -1,5 +1,7 @@
-from urllib import parse
+import logging
 import re
+from urllib import parse
+
 import dns.resolver
 
 
@@ -27,8 +29,10 @@ def parse_ip(host):
                 if hasattr(j, 'address'):
                     if not re.search(r'1\.1\.1\.1|8\.8\.8\.8|127\.0\.0\.1|114\.114\.114\.114|0\.0\.0\.0', j.address):
                         return j.address
-    except Exception as e:
+    except dns.resolver.NoAnswer:
         pass
+    except Exception as e:
+        logging.exception(e)
     return host
 
 
@@ -78,4 +82,3 @@ def dedup_link(urls):
                     _.append(i)
     _.extend(diff(furls))
     return _
-

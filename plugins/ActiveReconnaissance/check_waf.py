@@ -1,8 +1,9 @@
-import re
 import logging
+import re
+
+from lib.Requests import Requests
 from lib.iscdn import iscdn
 from lib.url import parse_host
-from lib.Requests import Requests
 from lib.waf import WAF_RULE
 
 '''
@@ -55,5 +56,5 @@ def checkwaf(url):
 
 
 if __name__ == "__main__":
-    out = checkwaf('http://127.0.0.1','test')
+    out = checkwaf('http://127.0.0.1')
     print(out)

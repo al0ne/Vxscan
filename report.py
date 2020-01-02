@@ -1,10 +1,10 @@
 # coding = utf-8
 
 import json
+import logging
 import re
 import time
-import sys
-import logging
+
 from lib.sqldb import Sqldb
 
 dbname = 'result'
@@ -29,11 +29,11 @@ def get_port(ipaddr):
 
 def gen_webinfo():
     tableData = []
-    sql = 'select time,domain,waf,title,apps,server,address,ipaddr,os,pdns,reverseip from webinfo'
+    sql = 'select time,domain,waf,title,apps,server,address,ipaddr,os from webinfo'
     try:
         res = Sqldb(dbname).query(sql)
         for i in res:
-            time, domain, waf, title, apps, server, address, ipaddr, os, pdns, reverseip = i
+            time, domain, waf, title, apps, server, address, ipaddr, os = i
             ports = get_port(domain)
             webinfo = {
                 "time": time,
@@ -45,8 +45,7 @@ def gen_webinfo():
                 "address": address,
                 "ipaddr": ipaddr,
                 "ports": ports,
-                "os": os,
-                "reverseip": reverseip
+                "os": os
             }
             tableData.append(webinfo)
         column = [
@@ -116,14 +115,6 @@ def gen_webinfo():
             {
                 "field": "os",
                 "title": "os",
-                "width": 100,
-                "tilteAlign": "center",
-                "columnAlign": "center"
-            },
-            # {"field": "pdns", "title": "pdns", "width": 100, "tilteAlign": "center", "columnAlign": "center"},
-            {
-                "field": "reverseip",
-                "title": "reverseip",
                 "width": 100,
                 "tilteAlign": "center",
                 "columnAlign": "center"
@@ -304,7 +295,7 @@ def gen_vuln():
 
 def gen_crawl():
     tableData = []
-    sql = 'select time, domain, type,leaks from crawl'
+    sql = 'select time, domain, type,leaks from Crawl'
     try:
         res = Sqldb(dbname).query(sql)
         for i in res:

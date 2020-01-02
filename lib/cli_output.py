@@ -1,8 +1,10 @@
 import sys
 import time
+
 import pyfiglet
-from lib.settings import POC, THREADS, SCANDIR, PING, SOCKS5, CHECK_DB
+
 from lib.bcolors import Bcolors
+from lib.settings import POC, THREADS, SCANDIR, PING, SOCKS5, CHECK_DB
 
 
 def banner():

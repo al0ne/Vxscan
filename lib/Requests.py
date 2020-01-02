@@ -1,15 +1,17 @@
 # coding=utf-8
 
-import OpenSSL
-import requests
-import urllib3
-import logging
 import hashlib
+import logging
 import random
 import re
-import ssl
-import socks
 import socket
+import ssl
+
+import OpenSSL
+import requests
+import socks
+import urllib3
+
 from lib.random_header import get_ua
 from lib.settings import TIMEOUT, COOKIE, SOCKS5
 
@@ -56,7 +58,8 @@ class Requests:
 
         except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout, requests.exceptions.Timeout,
                 requests.exceptions.SSLError, requests.exceptions.ConnectionError, ssl.SSLError, AttributeError,
-                ConnectionRefusedError, socket.timeout, urllib3.exceptions.ReadTimeoutError, OpenSSL.SSL.WantReadError):
+                ConnectionRefusedError, socket.timeout, urllib3.exceptions.ReadTimeoutError, OpenSSL.SSL.WantReadError,
+                urllib3.exceptions.DecodeError, requests.exceptions.ContentDecodingError):
             pass
         except Exception as e:
             logging.exception(e)
@@ -68,7 +71,8 @@ class Requests:
             return r
         except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout, requests.exceptions.Timeout,
                 requests.exceptions.SSLError, requests.exceptions.ConnectionError, ssl.SSLError, AttributeError,
-                ConnectionRefusedError, socket.timeout, urllib3.exceptions.ReadTimeoutError, OpenSSL.SSL.WantReadError):
+                ConnectionRefusedError, socket.timeout, urllib3.exceptions.ReadTimeoutError, OpenSSL.SSL.WantReadError,
+                urllib3.exceptions.DecodeError, requests.exceptions.ContentDecodingError):
             pass
         except Exception as e:
             logging.exception(e)
@@ -85,7 +89,8 @@ class Requests:
             return r
         except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout, requests.exceptions.Timeout,
                 requests.exceptions.SSLError, requests.exceptions.ConnectionError, ssl.SSLError, AttributeError,
-                ConnectionRefusedError, socket.timeout, urllib3.exceptions.ReadTimeoutError, OpenSSL.SSL.WantReadError):
+                ConnectionRefusedError, socket.timeout, urllib3.exceptions.ReadTimeoutError, OpenSSL.SSL.WantReadError,
+                urllib3.exceptions.DecodeError, requests.exceptions.ContentDecodingError):
             pass
         except Exception as e:
             logging.exception(e)
@@ -106,7 +111,8 @@ class Requests:
                 return r
         except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout, requests.exceptions.Timeout,
                 requests.exceptions.SSLError, requests.exceptions.ConnectionError, ssl.SSLError, AttributeError,
-                ConnectionRefusedError, socket.timeout, urllib3.exceptions.ReadTimeoutError, OpenSSL.SSL.WantReadError):
+                ConnectionRefusedError, socket.timeout, urllib3.exceptions.ReadTimeoutError, OpenSSL.SSL.WantReadError,
+                urllib3.exceptions.DecodeError, requests.exceptions.ContentDecodingError):
             pass
         except Exception as e:
             logging.exception(e)

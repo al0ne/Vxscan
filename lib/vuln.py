@@ -2,13 +2,14 @@
 # author: al0ne
 # https://github.com/al0ne
 
+import concurrent.futures
 import glob
 import importlib
-import time
 import logging
 import os
 import random
-import concurrent.futures
+import time
+
 from lib.cli_output import console
 from lib.sqldb import Sqldb
 from lib.url import parse_host
@@ -59,6 +60,6 @@ class Vuln:
 
 if __name__ == "__main__":
     start_time = time.time()
-    Vuln('', [''], [''], [''],'').run()
+    Vuln('', [''], [''], ['']).run()
     end_time = time.time()
     print('\nrunning {0:.3f} seconds...'.format(end_time - start_time))

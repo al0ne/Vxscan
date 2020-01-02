@@ -2,17 +2,19 @@
 # author: al0ne
 # https://github.com/al0ne
 
+import concurrent.futures
+import logging
 import re
 import time
-import logging
+
 from lib.Requests import Requests
-import concurrent.futures
 
 
 def verify(text):
+    # 验证匹配结果
     result = True
     for i in text:
-        if not re.search(r'^0\d\.\d+\.\d+\.\d+|google|png$|gif$|jpg$|\b\d+\.\d+\.0\.0', i):
+        if not re.search(r'^0\d\.\d+\.\d+\.\d+|google|recaptcha|gtm\.js|png$|gif$|jpg$|\b\d+\.\d+\.0\.0', i):
             result = False
             break
     return result
@@ -43,7 +45,7 @@ class JsLeaks:
             r'\b(?:http:|https:)(?:[\w/\.]+)?(?:[a-zA-Z0-9_\-\.]{1,})\.(?:php|asp|ashx|jspx|aspx|jsp|json|action|html|txt|xml|do|js)\b',
             r'([a-zA-Z0-9_\-]{1,}\.(?:php|asp|aspx|jsp|json|action|html|js|txt|xml)(?:\?[^\"|\']{0,}|))',
             # 匹配邮箱
-            r'[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(?:\.[a-zA-Z0-9_-]+)+',
+            r'[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+\.(?:biz|cc|club|cn|com|co|edu|fun|group|info|ink|kim|link|live|ltd|mobi|net|online|org|pro|pub|red|ren|shop|site|store|tech|top|tv|vip|wang|wiki|work|xin|xyz|me)',
             # 匹配token或者密码泄露
             # 例如token = xxxxxxxx, 或者"apikey" : "xssss"
             r'\b(?:secret|secret_key|token|secret_token|auth_token|access_token|username|password|aws_access_key_id|aws_secret_access_key|secretkey|authtoken|accesstoken|access-token|authkey|client_secret|bucket|extr|HEROKU_API_KEY|SF_USERNAME|PT_TOKEN|id_dsa|clientsecret|client-secret|encryption-key|pass|encryption_key|encryptionkey|secretkey|secret-key|bearer|JEKYLL_GITHUB_TOKEN|HOMEBREW_GITHUB_API_TOKEN|api_key|api_secret_key|api-key|private_key|client_key|client_id|sshkey|ssh_key|ssh-key|privatekey|DB_USERNAME|oauth_token|irc_pass|dbpasswd|xoxa-2|xoxrprivate-key|private_key|consumer_key|consumer_secret|access_token_secret|SLACK_BOT_TOKEN|slack_api_token|api_token|ConsumerKey|ConsumerSecret|SESSION_TOKEN|session_key|session_secret|slack_token|slack_secret_token|bot_access_token|passwd|api|eid|sid|qid|api_key|apikey|userid|user_id|user-id|uid|private|BDUSS|stoken|imei|imsi|nickname|appid|uname)["\s]*(?::|=|=:|=>)["\s]*[a-z0-9A-Z]{8,64}',
@@ -74,7 +76,7 @@ class JsLeaks:
 
 if __name__ == "__main__":
     start_time = time.time()
-    urls1 = ['https://www.xxx.com']
+    urls1 = ['https://www.baidu.com']
     jsparse = JsLeaks().pool(urls1)
     print(jsparse)
     end_time = time.time()

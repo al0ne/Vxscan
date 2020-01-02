@@ -1,7 +1,8 @@
-from lib.verify import verify
 import socket
 
-timeout = 2
+from lib.verify import verify
+
+timeout = 3
 
 vuln = ['rsync', '873']
 
@@ -25,4 +26,3 @@ def check(url, ip, ports, apps):
                 return '873 Rsync Unauthorized Access'
         except Exception as e:
             pass
-            # return '27017 MongoDB fail'

@@ -2,16 +2,17 @@
 # https://github.com/al0ne
 
 import re
+
 from lib.iscdn import iscdn
-from lib.url import parse_ip
-from lib.web_info import web_info
-from lib.sqldb import Sqldb
-from lib.vuln import Vuln
-from lib.verify import verify_https
 from lib.settings import SCANDIR, CRAWL
+from lib.sqldb import Sqldb
+from lib.url import parse_ip
+from lib.verify import verify_https
+from lib.vuln import Vuln
+from lib.web_info import web_info
 from plugins.ActiveReconnaissance.crawl import Crawl
-from plugins.Scanning.port_scan import ScanPort
 from plugins.Scanning.async_scan import DirScan
+from plugins.Scanning.port_scan import ScanPort
 
 
 def web_save(webinfo, dbname):
@@ -37,9 +38,10 @@ def start(target, dbname='result'):
         open_port = ScanPort(url, dbname).pool()
     else:
         open_port = ['CDN:0']
+    
     # 调用POC
     Vuln(url, host, open_port, apps, dbname).run()
-
+    
     if isopen:
         if CRAWL:
             Crawl(url, dbname).pool()

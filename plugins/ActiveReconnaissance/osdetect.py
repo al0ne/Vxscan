@@ -2,9 +2,11 @@
 # author: al0ne
 # https://github.com/al0ne
 
-import nmap
 import logging
 import xml
+
+import nmap
+
 from lib.cli_output import console
 
 

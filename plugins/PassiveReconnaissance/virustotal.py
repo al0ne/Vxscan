@@ -1,9 +1,11 @@
 # coding=utf-8
 import re
-from lib.iscdn import iscdn
+
 from virustotal_python import Virustotal
-from lib.settings import VIRUSTOTAL_API
+
 from lib.cli_output import console
+from lib.iscdn import iscdn
+from lib.settings import VIRUSTOTAL_API
 from plugins.PassiveReconnaissance.ip_history import ipinfo
 
 
@@ -27,7 +29,7 @@ def virustotal(host):
                 pdns = history_ip[10:]
         except Exception:
             pass
-        
+    
     pdns.extend(ipinfo(host))
     
     if pdns:

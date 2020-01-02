@@ -1,10 +1,11 @@
 # coding = utf-8
 
+import hashlib
+import logging
+import re
 import sqlite3
 import time
-import hashlib
-import re
-import logging
+
 from lib.cli_output import console
 from lib.url import parse_host
 
@@ -35,8 +36,6 @@ class Sqldb:
                 address varchar(255) DEFAULT '',
                 ipaddr varchar(255) DEFAULT '',
                 os varchar(255) DEFAULT '',
-                pdns varchar(255) DEFAULT '',
-                reverseip varchar(255) DEFAULT '',
                 md5 varchar(40) UNIQUE
                 )
                 """)
@@ -171,8 +170,8 @@ class Sqldb:
             service = i.get('server')
             port = i.get('port')
             banner = i.get('banner')
-            banner = re.sub('<', '\u003c', banner)
-            banner = re.sub('>', '\u003e', banner)
+            banner = re.sub('<', '', banner)
+            banner = re.sub('>', '', banner)
             md5sum = hashlib.md5()
             strings = str(ipaddr) + str(service) + str(port)
             md5sum.update(strings.encode('utf-8'))
@@ -226,11 +225,11 @@ class Sqldb:
                 apps = ' , '.join(apps)
             else:
                 apps = None
-            reverse_ip = v.get('Webinfo').get('reverseip')
-            if reverse_ip:
-                reverse_ip = ' , '.join(reverse_ip)
-            else:
-                reverse_ip = None
+            # reverse_ip = v.get('Webinfo').get('reverseip')
+            # if reverse_ip:
+            #     reverse_ip = ' , '.join(reverse_ip)
+            # else:
+            #     reverse_ip = None
             waf = v.get('WAF')
             if waf == 'None':
                 waf = None
@@ -243,11 +242,11 @@ class Sqldb:
             server = v.get('Webinfo').get('server')
             if server == 'None' or not server:
                 server = None
-            pdns = v.get('Webinfo').get('pdns')
-            if pdns:
-                pdns = ' , '.join(pdns)
-            else:
-                pdns = None
+            # pdns = v.get('Webinfo').get('pdns')
+            # if pdns:
+            #     pdns = ' , '.join(pdns)
+            # else:
+            #     pdns = None
             os = v.get('OS')
             if not os or os == 'None':
                 os = None
@@ -258,8 +257,8 @@ class Sqldb:
             strings = str(k) + str(title) + str(server)
             md5sum.update(strings.encode('utf-8'))
             md5 = md5sum.hexdigest()
-            values = (timestamp, k, waf, title, apps, server, address, ipaddr, os, pdns, reverse_ip, md5)
-            query = "INSERT OR IGNORE INTO webinfo (time, domain, waf, title, apps, server, address, ipaddr, os, pdns, reverseip,md5) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)"
+            values = (timestamp, k, waf, title, apps, server, address, ipaddr, os, md5)
+            query = "INSERT OR IGNORE INTO webinfo (time, domain, waf, title, apps, server, address, ipaddr, os,md5) VALUES (?,?,?,?,?,?,?,?,?,?)"
             self.insert_webinfo(query, values)
         self.commit()
         self.close()

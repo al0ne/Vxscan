@@ -1,6 +1,7 @@
 import re
-from lib.verify import get_list
+
 from lib.Requests import Requests
+from lib.verify import get_list
 
 
 def get_info(url):
@@ -16,11 +17,14 @@ def get_info(url):
 
 def check(url, ip, ports, apps):
     result = []
-    probe = get_list(url, ports)
-    for i in probe:
-        if re.search(r':\d+', i):
-            out = get_info(i)
-            if out:
-                result.append(out)
-    if result:
-        return result
+    try:
+        probe = get_list(url, ports)
+        for i in probe:
+            if re.search(r':\d+', i):
+                out = get_info(i)
+                if out:
+                    result.append(out)
+        if result:
+            return result
+    except Exception:
+        pass

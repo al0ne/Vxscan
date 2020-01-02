@@ -1,10 +1,12 @@
 import concurrent.futures
-import re
 import logging
-from lib.cli_output import console
-from lxml import etree
-from lib.Requests import Requests
+import re
 from urllib import parse
+
+from lxml import etree
+
+from lib.Requests import Requests
+from lib.cli_output import console
 from lib.sqldb import Sqldb
 from plugins.InformationGathering.js_leaks import JsLeaks
 
@@ -35,15 +37,15 @@ class Crawl:
         self.host = host
         self.result = []
         self.req = Requests()
-
+    
     def jsparse(self, r):
         try:
             html = etree.HTML(r.text)
             result = html.xpath('//script/@src')
             for i in result:
                 if not re.search(
-                        r'jquery|bootstrap|adsbygoogle|angular|javascript|#|vue|react|51.la/=|map\.baidu\.com|canvas|cnzz\.com|slick\.js|autofill-event\.js|tld\.js|clipboard|Chart\.js',
-                        i):
+                    r'jquery|bootstrap|adsbygoogle|angular|javascript|#|vue|react|51.la/=|map\.baidu\.com|canvas|cnzz\.com|slick\.js|autofill-event\.js|tld\.js|clipboard|Chart\.js',
+                    i):
                     if '://' not in i:
                         i = re.sub(r'^/|^\.\./', '', i)
                         i = self.host + '/' + i
@@ -52,7 +54,7 @@ class Crawl:
             pass
         except Exception as e:
             logging.exception(e)
-
+    
     def extr(self, url, body):
         # html页面内提取邮箱
         email = re.findall(r'\b[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(?:\.[a-zA-Z0-9_-]+)+', body)
@@ -83,7 +85,7 @@ class Crawl:
             body)
         if links3:
             self.result.extend(list(map(lambda x: 'URL: ' + url + '  Links: ' + x, links3)))
-
+    
     def parse_html(self, host):
         try:
             r = self.req.get(host)
@@ -109,11 +111,11 @@ class Crawl:
             pass
         except Exception as e:
             logging.exception(e)
-            
+        
         self.urls = dedup_url(self.urls)
         
         return list(set(self.urls))
-
+    
     def pool(self):
         result = self.parse_html(self.host)
         try:
@@ -125,17 +127,17 @@ class Crawl:
             pass
         except Exception as e:
             logging.exception(e)
-
+        
         jslink = JsLeaks().pool(self.js)
-
+        
         self.result.extend(jslink)
         self.result = list(set(self.result))
-
+        
         for i in self.result:
             console('Crawl', self.host, i + '\n')
-
+        
         Sqldb(self.dbname).get_crawl(self.domain, self.result)
 
 
 if __name__ == "__main__":
-    Crawl('https://www.xxx.com').pool()
+    Crawl('https://www.baidu.com').pool()
